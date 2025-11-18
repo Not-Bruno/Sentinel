@@ -1,18 +1,20 @@
-# 1. Install dependencies only when needed
+# Dockerfile for Sentinel View
+
+# 1. Installer Stage: Install dependencies
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* ./
 RUN npm install
 
-# 2. Rebuild the source code only when needed
+# 2. Builder Stage: Build the Next.js application
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-# 3. Production image, copy all the files and run next
+# 3. Runner Stage: Create the final, small production image
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -21,6 +23,7 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy a dummy public folder if it doesn't exist, to prevent build failures.
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
