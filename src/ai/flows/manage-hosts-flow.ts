@@ -17,9 +17,15 @@ const HOSTS_FILE_PATH = path.resolve(process.cwd(), 'data', 'hosts.json');
 // Ensure the data directory exists
 async function ensureDataDirectory() {
   try {
-    await fs.mkdir(path.dirname(HOSTS_FILE_PATH), { recursive: true });
+    // The directory is now created in the Dockerfile, so we just check access.
+    await fs.access(path.dirname(HOSTS_FILE_PATH));
   } catch (error) {
-    console.error('Failed to create data directory:', error);
+    // If it still fails, we try to create it, but this shouldn't be the primary path.
+    try {
+      await fs.mkdir(path.dirname(HOSTS_FILE_PATH), { recursive: true });
+    } catch (mkdirError) {
+        console.error('Failed to create data directory:', mkdirError);
+    }
   }
 }
 
@@ -33,9 +39,13 @@ const getSavedHostsFlow = ai.defineFlow(
     try {
       await fs.access(HOSTS_FILE_PATH);
       const fileContent = await fs.readFile(HOSTS_FILE_PATH, 'utf-8');
+      // Handle empty file case
+      if (fileContent.trim() === '') {
+        return [];
+      }
       return JSON.parse(fileContent) as Host[];
     } catch (error) {
-      // If the file doesn't exist, return an empty array.
+      // If the file doesn't exist, create it and return an empty array.
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         console.log('hosts.json not found, initializing with an empty array.');
         await fs.writeFile(HOSTS_FILE_PATH, JSON.stringify([], null, 2));
