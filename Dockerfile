@@ -1,18 +1,27 @@
-# 1. Install dependencies
+# 1. Install dependencies only when needed
 FROM node:20-alpine AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package.json package-lock.json* ./
+
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json* ./ 
 RUN npm install
 
-# 2. Build the app
+# 2. Rebuild the source code only when needed
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
 RUN npm run build
 
-# 3. Run the app
+# 3. Production image, copy all the files and run next
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -23,14 +32,15 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# You only need to copy next.config.ts if you are NOT using the standalone output mode.
-# COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
 USER nextjs
 
 EXPOSE 3000
 
-ENV PORT=3000
+ENV PORT 3000
 
+# Next.js starts a server on 0.0.0.0 instead of localhost (127.0.0.1) when it detects it's running in a container.
+# This is needed to ensure the service is accessible from outside the container.
 CMD ["node", "server.js"]
