@@ -1,6 +1,8 @@
-# Sentinel - Real-time Docker Container Monitoring
+# Sentinel - Real-time simple Docker Container Monitoring
 
-![Sentinel Dashboard](https://i.imgur.com/your-screenshot-url.png) <!-- Ersetzen Sie dies durch einen Screenshot Ihres Dashboards -->
+Unterstüzt durch KI
+
+![Sentinel Dashboard]()
 
 Sentinel ist eine moderne, webbasierte Monitoring-Anwendung, die es Ihnen ermöglicht, den Status von Docker-Containern auf verschiedenen Hosts in Echtzeit zu überwachen. Die Anwendung wurde mit Next.js, Tailwind CSS und TypeScript entwickelt und für den einfachen Betrieb in einem Docker-Container optimiert.
 
