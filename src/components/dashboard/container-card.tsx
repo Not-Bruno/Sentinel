@@ -11,7 +11,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-
 interface ContainerCardProps {
   container: Container;
   onRemove: (containerId: string) => void;
