@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 import { Header } from "@/components/layout/header";
@@ -15,6 +15,11 @@ export default function SentinelViewPage() {
   const [hosts, setHosts] = useState<Host[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const hostsRef = useRef<Host[]>([]);
+
+  useEffect(() => {
+    hostsRef.current = hosts;
+  }, [hosts]);
 
   const fetchHostData = useCallback(async (host: Host): Promise<Host> => {
     try {
@@ -25,7 +30,7 @@ export default function SentinelViewPage() {
       return { ...host, status: 'offline', containers: [] };
     }
   }, []);
-
+  
   const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
     const refreshedHosts = await Promise.all(currentHosts.map(host => fetchHostData(host)));
     setHosts(refreshedHosts);
@@ -42,9 +47,13 @@ export default function SentinelViewPage() {
   }, [refreshAllHosts]);
 
   useEffect(() => {
-    const interval = setInterval(() => refreshAllHosts(hosts), 5000); // Refresh every 5 seconds
+    const interval = setInterval(() => {
+      if (hostsRef.current.length > 0) {
+        refreshAllHosts(hostsRef.current)
+      }
+    }, 5000); // Refresh every 5 seconds
     return () => clearInterval(interval);
-  }, [hosts, refreshAllHosts]);
+  }, [refreshAllHosts]);
   
   const addHost = useCallback(async (data: { name: string; ipAddress: string; sshPort: number }) => {
     const newHost: Host = {
