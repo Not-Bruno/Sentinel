@@ -1,5 +1,5 @@
-import SentinelViewPage from './sentinel-view-page';
+import SentinelPage from './sentinel-page';
 
 export default function Home() {
-  return <SentinelViewPage />;
+  return <SentinelPage />;
 }

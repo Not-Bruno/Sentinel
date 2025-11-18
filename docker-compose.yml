@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  sentinel-view:
+  sentinel:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sentinel-view-app
+    container_name: sentinel-app
     ports:
       - "3000:3000"
     volumes:

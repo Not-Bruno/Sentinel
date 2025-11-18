@@ -3,7 +3,7 @@ import './globals.css';
 import { Providers } from '@/components/providers';
 
 export const metadata: Metadata = {
-  title: 'Sentinel View',
+  title: 'Sentinel',
   description: 'Real-time monitoring for your infrastructure.',
 };
 

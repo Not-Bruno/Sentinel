@@ -12,7 +12,7 @@ export function Header({ onAddHost }: HeaderProps) {
       <div className="flex items-center gap-3">
         <Logo className="w-7 h-7" />
         <h1 className="text-xl font-semibold tracking-tight font-headline">
-          Sentinel View
+          Sentinel
         </h1>
       </div>
       <div className="flex items-center gap-2">
