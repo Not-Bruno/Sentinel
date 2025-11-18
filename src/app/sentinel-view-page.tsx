@@ -5,60 +5,61 @@ import { useToast } from "@/hooks/use-toast";
 
 import { Header } from "@/components/layout/header";
 import { Dashboard } from "@/components/dashboard/dashboard";
-import type { Host, Container, HostStatus, ContainerStatus } from "@/lib/types";
+import type { Host, Container } from "@/lib/types";
 import { INITIAL_HOSTS } from "@/lib/mock-data";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getHostContainers } from "@/ai/flows/get-host-containers-flow";
+
 
 export default function SentinelViewPage() {
   const [hosts, setHosts] = useState<Host[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const fetchHostData = useCallback(async (host: Host): Promise<Host> => {
+    try {
+      const containerData = await getHostContainers({ hostId: host.id, ipAddress: host.ipAddress, sshPort: host.sshPort || 22 });
+      return { ...host, status: 'online', containers: containerData };
+    } catch (error) {
+      console.error(`Failed to fetch data for host ${host.name}:`, error);
+      return { ...host, status: 'offline', containers: [] };
+    }
+  }, []);
+
+  const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
+    const refreshedHosts = await Promise.all(currentHosts.map(host => fetchHostData(host)));
+    setHosts(refreshedHosts);
+  }, [fetchHostData]);
+
   useEffect(() => {
-    // Simulate initial data loading
-    setTimeout(() => {
-      setHosts(INITIAL_HOSTS.map(h => ({ ...h, createdAt: h.createdAt || Date.now() })));
+    const loadInitialData = async () => {
+      const initialHosts = INITIAL_HOSTS.map(h => ({ ...h, createdAt: h.createdAt || Date.now() }));
+      setHosts(initialHosts);
       setLoading(false);
-    }, 1000);
-  }, []);
-
-  const simulateUpdates = useCallback(() => {
-    setHosts(currentHosts => {
-      return currentHosts.map(host => {
-        // Randomly toggle host status
-        const newHostStatus: HostStatus = Math.random() > 0.98 ? (host.status === 'online' ? 'offline' : 'online') : host.status;
-
-        const newContainers = host.containers.map(container => {
-          // Randomly change container status
-          let newContainerStatus: ContainerStatus = container.status;
-          const rand = Math.random();
-          if (rand > 0.95) {
-            const statuses: ContainerStatus[] = ['running', 'stopped', 'error'];
-            newContainerStatus = statuses[Math.floor(Math.random() * statuses.length)];
-          }
-          return { ...container, status: newContainerStatus };
-        });
-
-        return { ...host, status: newHostStatus, containers: newContainers };
-      });
-    });
-  }, []);
+      await refreshAllHosts(initialHosts);
+    };
+    loadInitialData();
+  }, [refreshAllHosts]);
 
   useEffect(() => {
-    const interval = setInterval(simulateUpdates, 3000); // Update every 3 seconds
+    const interval = setInterval(() => refreshAllHosts(hosts), 5000); // Refresh every 5 seconds
     return () => clearInterval(interval);
-  }, [simulateUpdates]);
+  }, [hosts, refreshAllHosts]);
   
-  const addHost = useCallback((data: { name: string; ipAddress: string }) => {
+  const addHost = useCallback(async (data: { name: string; ipAddress: string; sshPort: number }) => {
     const newHost: Host = {
       id: `host-${Date.now()}`,
       ...data,
-      status: 'online',
+      status: 'online', // Assume online initially
       createdAt: Date.now(),
       containers: [],
     };
-    setHosts(currentHosts => [newHost, ...currentHosts]);
-  }, []);
+    
+    setLoading(true);
+    const hostWithData = await fetchHostData(newHost);
+    setHosts(currentHosts => [hostWithData, ...currentHosts]);
+    setLoading(false);
+  }, [fetchHostData]);
   
   const removeHost = useCallback((hostId: string) => {
     setHosts(currentHosts => currentHosts.filter(h => h.id !== hostId));
@@ -99,7 +100,7 @@ export default function SentinelViewPage() {
     <div className="flex flex-col min-h-screen bg-secondary/40">
       <Header onAddHost={addHost} />
       <main className="flex-1 p-4 sm:p-6 md:p-8">
-        {loading ? <LoadingSkeleton /> : <Dashboard hosts={hosts} onRemoveHost={removeHost} onRemoveContainer={removeContainer} />}
+        {loading && hosts.length === 0 ? <LoadingSkeleton /> : <Dashboard hosts={hosts} onRemoveHost={removeHost} onRemoveContainer={removeContainer} />}
       </main>
     </div>
   );

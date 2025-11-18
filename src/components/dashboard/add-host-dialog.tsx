@@ -31,6 +31,7 @@ const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[
 const formSchema = z.object({
   name: z.string().min(1, "Host name is required"),
   ipAddress: z.string().regex(ipRegex, "Invalid IPv4 address"),
+  sshPort: z.coerce.number().min(1, "SSH Port is required").max(65535, "Invalid port number").default(22),
 });
 
 type AddHostFormValues = z.infer<typeof formSchema>;
@@ -46,6 +47,7 @@ export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
     defaultValues: {
       name: "",
       ipAddress: "",
+      sshPort: 22,
     },
   });
 
@@ -93,6 +95,19 @@ export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
                   <FormLabel>IP Address</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., 192.168.1.100" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="sshPort"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SSH Port</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="e.g., 22" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

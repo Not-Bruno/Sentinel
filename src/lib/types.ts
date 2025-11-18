@@ -11,9 +11,10 @@ export interface Container {
 export type HostStatus = 'online' | 'offline';
 
 export interface Host {
-  id: string;
+  id:string;
   name: string;
   ipAddress: string;
+  sshPort?: number;
   status: HostStatus;
   createdAt: number; // Use timestamp for easier serialization
   containers: Container[];

@@ -2,7 +2,7 @@ import { AddHostDialog } from "@/components/dashboard/add-host-dialog";
 import { Logo } from "@/components/logo";
 
 interface HeaderProps {
-  onAddHost: (host: { name: string; ipAddress: string }) => void;
+  onAddHost: (host: { name: string; ipAddress: string; sshPort: number; }) => void;
 }
 
 export function Header({ onAddHost }: HeaderProps) {
