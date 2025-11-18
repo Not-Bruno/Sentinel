@@ -1,5 +1,6 @@
 import { AddHostDialog } from "@/components/dashboard/add-host-dialog";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "./theme-toggle";
 
 interface HeaderProps {
   onAddHost: (host: { name: string; ipAddress: string; sshPort: number; }) => void;
@@ -14,7 +15,10 @@ export function Header({ onAddHost }: HeaderProps) {
           Sentinel View
         </h1>
       </div>
-      <AddHostDialog onAddHost={onAddHost} />
+      <div className="flex items-center gap-2">
+        <AddHostDialog onAddHost={onAddHost} />
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
