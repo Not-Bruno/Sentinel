@@ -35,8 +35,9 @@ const getHostContainersFlow = ai.defineFlow(
   },
   async (input) => {
     if (!process.env.SSH_PRIVATE_KEY) {
-      console.error('SSH_PRIVATE_KEY environment variable is not set.');
-      throw new Error('SSH private key is not configured. Cannot connect to hosts.');
+      console.error('SSH_PRIVATE_KEY environment variable is not set. Returning empty container list.');
+      // Returning an empty array instead of throwing, to prevent server component render failure.
+      return []; 
     }
 
     const ssh = new NodeSSH();
