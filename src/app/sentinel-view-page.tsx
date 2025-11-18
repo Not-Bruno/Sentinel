@@ -5,10 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 
 import { Header } from "@/components/layout/header";
 import { Dashboard } from "@/components/dashboard/dashboard";
-import type { Host, Container } from "@/lib/types";
-import { INITIAL_HOSTS } from "@/lib/mock-data";
+import type { Host } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getHostContainers } from "@/ai/flows/get-host-containers-flow";
+import { getSavedHosts, saveHosts } from "@/ai/flows/manage-hosts-flow";
 
 
 export default function SentinelViewPage() {
@@ -32,24 +32,38 @@ export default function SentinelViewPage() {
   }, []);
   
   const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
-    const refreshedHosts = await Promise.all(currentHosts.map(host => fetchHostData(host)));
-    setHosts(refreshedHosts);
+    try {
+        const refreshedHosts = await Promise.all(currentHosts.map(host => fetchHostData(host)));
+        setHosts(refreshedHosts);
+    } catch (error) {
+        console.error("Error refreshing hosts:", error);
+    }
   }, [fetchHostData]);
 
   useEffect(() => {
     const loadInitialData = async () => {
-      const initialHosts = INITIAL_HOSTS.map(h => ({ ...h, createdAt: h.createdAt || Date.now() }));
-      setHosts(initialHosts);
+      setLoading(true);
+      try {
+        const initialHosts = await getSavedHosts();
+        setHosts(initialHosts);
+        await refreshAllHosts(initialHosts);
+      } catch (error) {
+        console.error("Failed to load initial host data:", error);
+        toast({
+          title: "Error Loading Hosts",
+          description: "Could not load the saved host list.",
+          variant: "destructive",
+        });
+      }
       setLoading(false);
-      await refreshAllHosts(initialHosts);
     };
     loadInitialData();
-  }, [refreshAllHosts]);
+  }, [refreshAllHosts, toast]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (hostsRef.current.length > 0) {
-        refreshAllHosts(hostsRef.current)
+        refreshAllHosts(hostsRef.current);
       }
     }, 5000); // Refresh every 5 seconds
     return () => clearInterval(interval);
@@ -66,12 +80,22 @@ export default function SentinelViewPage() {
     
     setLoading(true);
     const hostWithData = await fetchHostData(newHost);
-    setHosts(currentHosts => [hostWithData, ...currentHosts]);
+    
+    setHosts(currentHosts => {
+      const updatedHosts = [hostWithData, ...currentHosts];
+      saveHosts(updatedHosts).catch(err => console.error("Failed to save hosts:", err));
+      return updatedHosts;
+    });
+
     setLoading(false);
   }, [fetchHostData]);
   
   const removeHost = useCallback((hostId: string) => {
-    setHosts(currentHosts => currentHosts.filter(h => h.id !== hostId));
+    setHosts(currentHosts => {
+      const updatedHosts = currentHosts.filter(h => h.id !== hostId);
+      saveHosts(updatedHosts).catch(err => console.error("Failed to save hosts:", err));
+      return updatedHosts;
+    });
     toast({
         title: "Host Removed",
         description: `Stopped monitoring host.`,
@@ -80,6 +104,8 @@ export default function SentinelViewPage() {
   }, [toast]);
 
   const removeContainer = useCallback((hostId: string, containerId: string) => {
+    // This action is temporary and visual only, it doesn't persist.
+    // The container will reappear on the next refresh cycle.
     setHosts(currentHosts => currentHosts.map(h => {
       if (h.id === hostId) {
         return {
