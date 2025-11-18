@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": "host-local-001",
+    "name": "Dieser Host",
+    "ipAddress": "0.0.0.1",
+    "sshPort": 0,
+    "status": "online",
+    "createdAt": 1672531200000,
+    "containers": []
+  }
+]
