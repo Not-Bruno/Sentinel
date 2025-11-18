@@ -10,4 +10,5 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      # - SSH_PRIVATE_KEY=-----BEGIN OPENSSH PRIVATE KEY-----\nYOUR_KEY_HERE\n-----END OPENSSH PRIVATE KEY-----
     restart: unless-stopped
