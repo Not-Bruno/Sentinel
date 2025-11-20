@@ -1,10 +1,11 @@
 'use server';
 /**
- * @fileOverview A flow to get container information from a host.
+ * @fileOverview Dieser Flow ist dafür zuständig, Container-Informationen von einem Host abzurufen.
  *
- * - getHostContainers - A function that fetches container data from a host via SSH or locally.
- * - GetHostContainersInput - The input type for the getHostContainers function.
- * - GetHostContainersOutput - The return type for the getHostContainers function.
+ * - getHostContainers: Eine Funktion, die Container-Daten entweder über eine SSH-Verbindung
+ *   oder direkt lokal abfragt.
+ * - GetHostContainersInput: Definiert, welche Informationen du der Funktion übergeben musst.
+ * - GetHostContainersOutput: Definiert, was du als Ergebnis zurückbekommst.
  */
 
 import { ai } from '@/ai/genkit';
@@ -14,15 +15,15 @@ import { NodeSSH } from 'node-ssh';
 import { exec } from 'child_process';
 
 const GetHostContainersInputSchema = z.object({
-  hostId: z.string().describe('The ID of the host.'),
-  ipAddress: z.string().describe('The IP address of the host.'),
-  sshPort: z.number().describe('The SSH port of the host.'),
+  hostId: z.string().describe('Die ID des Hosts.'),
+  ipAddress: z.string().describe('Die IP-Adresse des Hosts.'),
+  sshPort: z.number().describe('Der SSH-Port des Hosts.'),
 });
 export type GetHostContainersInput = z.infer<typeof GetHostContainersInputSchema>;
 
 export type GetHostContainersOutput = Container[];
 
-// This is a wrapper function that calls the flow.
+// Dies ist eine Wrapper-Funktion, die den eigentlichen Flow aufruft.
 export async function getHostContainers(input: GetHostContainersInput): Promise<GetHostContainersOutput> {
   return getHostContainersFlow(input);
 }
@@ -36,20 +37,21 @@ const getHostContainersFlow = ai.defineFlow(
   async (input) => {
     const command = "docker ps -a --format '{{json .}}'";
 
-    // Special case for the local host via Docker socket
+    // Sonderfall für den lokalen Host: Hier nutzen wir den Docker-Socket.
+    // Wir erkennen den lokalen Host an der speziellen IP-Adresse '0.0.0.1'.
     if (input.ipAddress === '0.0.0.1') {
-      console.log(`[LOCAL] Executing locally via Docker socket: ${command}`);
+      console.log(`[LOKAL] Führe Befehl direkt über den Docker-Socket aus: ${command}`);
       return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
           if (error) {
-            console.error('Local docker command failed:', stderr);
-            // Check for a common error when the socket is not mounted
+            console.error('Lokaler Docker-Befehl fehlgeschlagen:', stderr);
+            // Häufiger Fehler: Socket ist nicht gemountet oder Berechtigungen fehlen.
             if (stderr.includes('permission denied') || stderr.includes('Is the docker daemon running?')) {
-               console.error('Error hint: Is /var/run/docker.sock correctly mounted into the container with the right permissions?');
-               // Return empty array to prevent UI crash
+               console.error('Fehlerhinweis: Ist /var/run/docker.sock korrekt in den Container gemountet und hat die richtigen Berechtigungen?');
+               // Wir geben ein leeres Array zurück, damit die UI nicht abstürzt.
                return resolve([]);
             }
-            return reject(new Error(`Failed to execute local command: ${stderr}`));
+            return reject(new Error(`Konnte lokalen Befehl nicht ausführen: ${stderr}`));
           }
           const containers = parseDockerPsJson(stdout);
           resolve(containers);
@@ -57,34 +59,34 @@ const getHostContainersFlow = ai.defineFlow(
       });
     }
 
-    // Existing SSH logic for remote hosts
+    // Standard-Logik für Remote-Hosts über SSH
     if (!process.env.SSH_PRIVATE_KEY) {
-      console.error('SSH_PRIVATE_KEY environment variable is not set. Returning empty container list for remote host.');
+      console.error('Umgebungsvariable SSH_PRIVATE_KEY ist nicht gesetzt. Für Remote-Hosts wird eine leere Container-Liste zurückgegeben.');
       return [];
     }
 
     const ssh = new NodeSSH();
-    console.log(`[SSH] Executing over SSH to ${input.ipAddress}:${input.sshPort}: ${command}`);
+    console.log(`[SSH] Führe Befehl über SSH auf ${input.ipAddress}:${input.sshPort} aus: ${command}`);
 
     try {
         await ssh.connect({
             host: input.ipAddress,
             port: input.sshPort,
-            username: 'root',
+            username: 'root', // Docker erfordert oft root-Rechte
             privateKey: process.env.SSH_PRIVATE_KEY.replace(/\\n/g, '\n'),
         });
 
         const result = await ssh.execCommand(command);
 
         if (result.code !== 0) {
-            console.error('SSH command failed:', result.stderr);
-            throw new Error(`Failed to execute command on host ${input.ipAddress}: ${result.stderr}`);
+            console.error('SSH-Befehl fehlgeschlagen:', result.stderr);
+            throw new Error(`Fehler beim Ausführen des Befehls auf Host ${input.ipAddress}: ${result.stderr}`);
         }
 
         return parseDockerPsJson(result.stdout);
 
     } catch (error) {
-        console.error(`SSH connection or command error for host ${input.ipAddress}:`, error);
+        console.error(`Fehler bei SSH-Verbindung oder Befehl für Host ${input.ipAddress}:`, error);
         throw error;
     } finally {
         if(ssh.isConnected()) {
@@ -94,22 +96,31 @@ const getHostContainersFlow = ai.defineFlow(
   }
 );
 
+/**
+ * Wandelt den JSON-Output des `docker ps`-Befehls in ein sauberes Array von Container-Objekten um.
+ * @param stdout Die rohe Ausgabe des Befehls.
+ * @returns Ein Array von Container-Objekten.
+ */
 function parseDockerPsJson(stdout: string): Container[] {
+    // Jede Zeile ist ein JSON-Objekt für einen Container.
     const containerJsonLines = stdout.trim().split('\n');
     
+    // Wenn die Ausgabe leer ist, gibt es keine Container.
     if (containerJsonLines.length === 1 && containerJsonLines[0] === '') {
-      return []; // No containers found
+      return [];
     }
 
     const containers: Container[] = containerJsonLines.map(line => {
         const dockerInfo = JSON.parse(line);
         let status: Container['status'] = 'stopped';
+        
+        // Wir interpretieren den Docker-Status und weisen unseren eigenen Status zu.
         if (dockerInfo.State === 'running') {
           status = 'running';
         } else if (dockerInfo.State === 'exited' || dockerInfo.State === 'created') {
-          status = 'stopped';
+          status = 'stopped'; // Gewollt gestoppt
         } else {
-          status = 'error';
+          status = 'error'; // Alle anderen Zustände (restarting, dead, etc.) gelten als Fehler.
         }
 
         return {
