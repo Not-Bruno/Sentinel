@@ -27,8 +27,8 @@ Um Sentinel zu nutzen, brauchst du nur Docker und Docker Compose auf deinem Syst
 
 1.  **Repository klonen (falls du es noch nicht hast):**
     ```bash
-    git clone <deine-repository-url>
-    cd <dein-projektordner>
+    git clone <repository-url>
+    cd <repository-ordner>
     ```
 
 2.  **Anwendung bauen und starten:**
