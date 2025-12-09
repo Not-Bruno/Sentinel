@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Container, ContainerStatus } from "@/lib/types";
-import { cn, formatUptime } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { CheckCircle2, HelpCircle, PowerOff, Trash2, XCircle } from "lucide-react";
 import { getContainerLogo } from "@/components/logos";
 import { Button } from "../ui/button";
@@ -48,7 +48,7 @@ export function ContainerCard({ container, onRemove }: ContainerCardProps) {
           </Tooltip>
         </CardHeader>
         <CardContent className="p-3 pt-0 text-xs text-muted-foreground">
-          <p>Uptime: {formatUptime(container.createdAt)}</p>
+          <p className="truncate">Status: {container.uptime}</p>
           <p className="truncate">Image: {container.image}</p>
         </CardContent>
          <Button size="icon" variant="ghost" className="absolute top-0.5 right-0.5 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onRemove(container.id)}>

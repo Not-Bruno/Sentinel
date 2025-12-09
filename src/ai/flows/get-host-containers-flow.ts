@@ -157,6 +157,7 @@ function parseDockerPsJson(stdout: string): Container[] {
               name: dockerInfo.Names,
               image: dockerInfo.Image,
               status: status,
+              uptime: dockerInfo.Status,
               createdAt: Date.parse(dockerInfo.CreatedAt) || new Date(dockerInfo.CreatedAt * 1000).getTime() || Date.now(),
           };
         } catch (e) {

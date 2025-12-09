@@ -15,6 +15,7 @@ export interface Container {
   name: string;        // Der Name, den du dem Container gegeben hast.
   image: string;       // Das Docker-Image, aus dem der Container erstellt wurde.
   status: ContainerStatus; // Der aktuelle Zustand des Containers.
+  uptime: string;      // Die Laufzeit des Containers als Text (z.B. "Up 5 hours").
   createdAt: number;   // Der Zeitstempel, wann der Container erstellt wurde (in Millisekunden).
 }
 
