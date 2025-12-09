@@ -7,8 +7,8 @@
     "status": "online",
     "createdAt": 1672531200000,
     "containers": [],
-    "cpuUsage": 95.2,
-    "memoryUsage": 54.24,
+    "cpuUsage": 63.2,
+    "memoryUsage": 53.98,
     "diskUsage": 1,
     "history": [
       {
@@ -285,6 +285,11 @@
         "timestamp": 1765282457967,
         "cpuUsage": 95.2,
         "memoryUsage": 54.24
+      },
+      {
+        "timestamp": 1765282462949,
+        "cpuUsage": 63.2,
+        "memoryUsage": 53.98
       }
     ]
   }
