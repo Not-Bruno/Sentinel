@@ -37,4 +37,7 @@ export interface Host {
   status: HostStatus;      // Der aktuelle Online-Status des Hosts.
   createdAt: number;       // Der Zeitstempel, wann du den Host hinzugefügt hast (in Millisekunden).
   containers: Container[]; // Eine Liste der Docker-Container, die auf diesem Host laufen.
+  cpuUsage?: number;       // CPU-Auslastung in Prozent.
+  memoryUsage?: number;    // Arbeitsspeicher-Auslastung in Prozent.
+  diskUsage?: number;      // Festplatten-Auslastung in Prozent.
 }

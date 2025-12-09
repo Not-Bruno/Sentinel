@@ -7,7 +7,7 @@ import { Header } from "@/components/layout/header";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import type { Host } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getHostContainers } from "@/ai/flows/get-host-containers-flow";
+import { getHostData } from "@/ai/flows/get-host-containers-flow";
 import { getSavedHosts, saveHosts } from "@/ai/flows/manage-hosts-flow";
 
 
@@ -23,11 +23,25 @@ export default function SentinelPage() {
 
   const fetchHostData = useCallback(async (host: Host): Promise<Host> => {
     try {
-      const containerData = await getHostContainers({ hostId: host.id, ipAddress: host.ipAddress, sshPort: host.sshPort || 22 });
-      return { ...host, status: 'online', containers: containerData };
+      const data = await getHostData({ hostId: host.id, ipAddress: host.ipAddress, sshPort: host.sshPort || 22 });
+      return { 
+        ...host, 
+        status: 'online', 
+        containers: data.containers,
+        cpuUsage: data.cpuUsage,
+        memoryUsage: data.memoryUsage,
+        diskUsage: data.diskUsage,
+      };
     } catch (error) {
       console.error(`Failed to fetch data for host ${host.name}:`, error);
-      return { ...host, status: 'offline', containers: [] };
+      return { 
+        ...host, 
+        status: 'offline', 
+        containers: [],
+        cpuUsage: undefined,
+        memoryUsage: undefined,
+        diskUsage: undefined,
+      };
     }
   }, []);
   
@@ -45,8 +59,11 @@ export default function SentinelPage() {
       setLoading(true);
       try {
         const initialHosts = await getSavedHosts();
-        setHosts(initialHosts);
-        await refreshAllHosts(initialHosts);
+        if (initialHosts.length > 0) {
+          await refreshAllHosts(initialHosts);
+        } else {
+           setHosts(initialHosts);
+        }
       } catch (error) {
         console.error("Failed to load initial host data:", error);
         toast({
@@ -121,11 +138,7 @@ export default function SentinelPage() {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
       {[...Array(3)].map((_, i) => (
         <div key={i} className="flex flex-col space-y-3">
-          <Skeleton className="h-[125px] w-full rounded-xl" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
-          </div>
+          <Skeleton className="h-[250px] w-full rounded-xl" />
         </div>
       ))}
     </div>
