@@ -64,6 +64,7 @@ export default function SentinelPage() {
   }, []);
   
   const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
+    if (currentHosts.length === 0) return;
     try {
         const refreshedHosts = await Promise.all(currentHosts.map(host => fetchHostData(host)));
         setHosts(refreshedHosts);
@@ -79,10 +80,9 @@ export default function SentinelPage() {
       setLoading(true);
       try {
         const initialHosts = await getSavedHosts();
+        setHosts(initialHosts); // Set hosts immediately to avoid flickering
         if (initialHosts.length > 0) {
           await refreshAllHosts(initialHosts);
-        } else {
-           setHosts(initialHosts);
         }
       } catch (error) {
         console.error("Failed to load initial host data:", error);
@@ -91,11 +91,13 @@ export default function SentinelPage() {
           description: "Could not load the saved host list.",
           variant: "destructive",
         });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     loadInitialData();
-  }, [refreshAllHosts, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -116,16 +118,17 @@ export default function SentinelPage() {
       history: [],
     };
     
-    setLoading(true);
+    // Show loading state for the new host
+    setHosts(currentHosts => [newHost, ...currentHosts]);
+
     const hostWithData = await fetchHostData(newHost);
     
     setHosts(currentHosts => {
-      const updatedHosts = [hostWithData, ...currentHosts];
+      const updatedHosts = currentHosts.map(h => h.id === newHost.id ? hostWithData : h);
       saveHosts(updatedHosts).catch(err => console.error("Failed to save hosts:", err));
       return updatedHosts;
     });
 
-    setLoading(false);
   }, [fetchHostData]);
   
   const removeHost = useCallback((hostId: string) => {
@@ -137,7 +140,6 @@ export default function SentinelPage() {
     toast({
         title: "Host Removed",
         description: `Stopped monitoring host.`,
-        variant: "destructive",
     });
   }, [toast]);
 

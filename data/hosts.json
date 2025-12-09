@@ -6,6 +6,21 @@
     "sshPort": 0,
     "status": "online",
     "createdAt": 1672531200000,
-    "containers": []
+    "containers": [],
+    "cpuUsage": 65,
+    "memoryUsage": 41.22,
+    "diskUsage": 1,
+    "history": [
+      {
+        "timestamp": 1765281870404,
+        "cpuUsage": 61.9,
+        "memoryUsage": 37.49
+      },
+      {
+        "timestamp": 1765281895302,
+        "cpuUsage": 65,
+        "memoryUsage": 41.22
+      }
+    ]
   }
 ]

@@ -118,6 +118,7 @@ const getHostDataFlow = ai.defineFlow(
 
     } catch (error) {
       console.error(`Fehler bei SSH-Verbindung oder Befehl für Host ${input.ipAddress}:`, error);
+      // Im Fehlerfall werfen wir den Fehler weiter, damit er in der aufrufenden Funktion behandelt werden kann
       throw error;
     } finally {
       if (ssh.isConnected()) {
@@ -151,14 +152,17 @@ function parseDockerPsJson(stdout: string): Container[] {
           } else {
             status = 'error';
           }
+          
+          // Robustere Datumsumwandlung
+          const createdAtTimestamp = Date.parse(dockerInfo.CreatedAt.replace(" Z", "Z"));
 
           return {
               id: dockerInfo.ID,
               name: dockerInfo.Names,
               image: dockerInfo.Image,
               status: status,
-              uptime: dockerInfo.Status,
-              createdAt: Date.parse(dockerInfo.CreatedAt) || new Date(dockerInfo.CreatedAt * 1000).getTime() || Date.now(),
+              uptime: dockerInfo.Status, // Beinhaltet die menschenlesbare Laufzeit wie "Up 5 hours"
+              createdAt: !isNaN(createdAtTimestamp) ? createdAtTimestamp : Date.now(),
           };
         } catch (e) {
           console.error(`Konnte die Docker-JSON-Zeile nicht parsen: ${line}`, e);

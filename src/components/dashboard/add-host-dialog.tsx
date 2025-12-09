@@ -29,9 +29,9 @@ import { useState } from "react";
 const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
 const formSchema = z.object({
-  name: z.string().min(1, "Host name is required"),
-  ipAddress: z.string().regex(ipRegex, "Invalid IPv4 address"),
-  sshPort: z.coerce.number().min(1, "SSH Port is required").max(65535, "Invalid port number").default(22),
+  name: z.string().min(1, "Ein Host-Name wird benötigt."),
+  ipAddress: z.string().regex(ipRegex, "Ungültige IPv4-Adresse."),
+  sshPort: z.coerce.number().min(1, "Ein SSH-Port wird benötigt.").max(65535, "Ungültige Port-Nummer.").default(22),
 });
 
 type AddHostFormValues = z.infer<typeof formSchema>;
@@ -62,14 +62,14 @@ export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Host
+          Host hinzufügen
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Host</DialogTitle>
+          <DialogTitle>Neuen Host hinzufügen</DialogTitle>
           <DialogDescription>
-            Enter the details for the new host to monitor.
+            Gib die Details für den neuen Host ein, den du überwachen möchtest.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -79,9 +79,9 @@ export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Host Name</FormLabel>
+                  <FormLabel>Host-Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Production Server" {...field} />
+                    <Input placeholder="z.B. Produktions-Server" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -92,9 +92,9 @@ export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
               name="ipAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>IP Address</FormLabel>
+                  <FormLabel>IP-Adresse</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., 192.168.1.100" {...field} />
+                    <Input placeholder="z.B. 192.168.1.100" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -105,16 +105,16 @@ export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
               name="sshPort"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>SSH Port</FormLabel>
+                  <FormLabel>SSH-Port</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 22" {...field} />
+                    <Input type="number" placeholder="z.B. 22" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit">Add Host</Button>
+              <Button type="submit">Host hinzufügen</Button>
             </DialogFooter>
           </form>
         </Form>
