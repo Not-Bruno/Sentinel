@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getHostData } from "@/ai/flows/get-host-containers-flow";
 import { getSavedHosts, saveHosts } from "@/ai/flows/manage-hosts-flow";
 
+const MAX_HISTORY_AGE = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 export default function SentinelPage() {
   const [hosts, setHosts] = useState<Host[]>([]);
@@ -24,6 +25,21 @@ export default function SentinelPage() {
   const fetchHostData = useCallback(async (host: Host): Promise<Host> => {
     try {
       const data = await getHostData({ hostId: host.id, ipAddress: host.ipAddress, sshPort: host.sshPort || 22 });
+      
+      const now = Date.now();
+      const newHistoryEntry = {
+        timestamp: now,
+        cpuUsage: data.cpuUsage ?? 0,
+        memoryUsage: data.memoryUsage ?? 0,
+      };
+
+      // Filter out old history entries and add the new one
+      const recentHistory = (host.history || []).filter(
+        (entry) => now - entry.timestamp < MAX_HISTORY_AGE
+      );
+      const updatedHistory = [...recentHistory, newHistoryEntry];
+
+
       return { 
         ...host, 
         status: 'online', 
@@ -31,16 +47,18 @@ export default function SentinelPage() {
         cpuUsage: data.cpuUsage,
         memoryUsage: data.memoryUsage,
         diskUsage: data.diskUsage,
+        history: updatedHistory,
       };
     } catch (error) {
       console.error(`Failed to fetch data for host ${host.name}:`, error);
       return { 
         ...host, 
         status: 'offline', 
-        containers: [],
+        containers: host.containers || [], // Keep old container data on error
         cpuUsage: undefined,
         memoryUsage: undefined,
         diskUsage: undefined,
+        history: host.history || [], // Keep old history on error
       };
     }
   }, []);
@@ -49,6 +67,8 @@ export default function SentinelPage() {
     try {
         const refreshedHosts = await Promise.all(currentHosts.map(host => fetchHostData(host)));
         setHosts(refreshedHosts);
+        // Persist hosts with updated history
+        await saveHosts(refreshedHosts);
     } catch (error) {
         console.error("Error refreshing hosts:", error);
     }
@@ -93,6 +113,7 @@ export default function SentinelPage() {
       status: 'online', // Assume online initially
       createdAt: Date.now(),
       containers: [],
+      history: [],
     };
     
     setLoading(true);

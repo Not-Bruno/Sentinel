@@ -17,6 +17,8 @@ export interface Container {
   status: ContainerStatus; // Der aktuelle Zustand des Containers.
   uptime: string;      // Die Laufzeit des Containers als Text (z.B. "Up 5 hours").
   createdAt: number;   // Der Zeitstempel, wann der Container erstellt wurde (in Millisekunden).
+  cpuUsage?: number;
+  memoryUsage?: number;
 }
 
 /**
@@ -25,6 +27,12 @@ export interface Container {
  * 'offline': Der Host ist nicht erreichbar.
  */
 export type HostStatus = 'online' | 'offline';
+
+export interface HostMetric {
+  timestamp: number;
+  cpuUsage: number;
+  memoryUsage: number;
+}
 
 /**
  * Beschreibt die Struktur eines Host-Objekts, das du überwachst.
@@ -41,4 +49,5 @@ export interface Host {
   cpuUsage?: number;       // CPU-Auslastung in Prozent.
   memoryUsage?: number;    // Arbeitsspeicher-Auslastung in Prozent.
   diskUsage?: number;      // Festplatten-Auslastung in Prozent.
+  history?: HostMetric[];   // Verlauf der Systemmetriken
 }

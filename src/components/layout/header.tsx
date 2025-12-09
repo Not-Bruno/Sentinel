@@ -1,5 +1,8 @@
+import Link from "next/link";
+import { LineChart } from "lucide-react";
 import { AddHostDialog } from "@/components/dashboard/add-host-dialog";
 import { Logo } from "@/components/logo";
+import { Button } from "../ui/button";
 import { ThemeToggle } from "./theme-toggle";
 
 interface HeaderProps {
@@ -11,11 +14,17 @@ export function Header({ onAddHost }: HeaderProps) {
     <header className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 border-b shrink-0 bg-background sm:px-6 md:px-8">
       <div className="flex items-center gap-3">
         <Logo className="w-7 h-7" />
-        <h1 className="text-xl font-semibold tracking-tight font-headline">
+        <Link href="/" className="text-xl font-semibold tracking-tight font-headline">
           Sentinel
-        </h1>
+        </Link>
       </div>
       <div className="flex items-center gap-2">
+        <Button variant="outline" size="icon" asChild>
+          <Link href="/monitoring">
+            <LineChart className="h-4 w-4" />
+            <span className="sr-only">Monitoring</span>
+          </Link>
+        </Button>
         <AddHostDialog onAddHost={onAddHost} />
         <ThemeToggle />
       </div>
