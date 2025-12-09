@@ -34,8 +34,8 @@ export function ContainerCard({ container, onRemove }: ContainerCardProps) {
         'hover:shadow-md': true
       })}>
         <CardHeader className="flex flex-row items-center justify-between p-3 space-y-0">
-          <div className="flex items-center gap-2 overflow-hidden">
-              <Logo className="w-5 h-5 flex-shrink-0" />
+          <div className="flex items-center gap-3 overflow-hidden">
+              <Logo className="w-6 h-6 flex-shrink-0" />
               <CardTitle className="text-sm font-medium truncate">{container.name}</CardTitle>
           </div>
           <Tooltip>
