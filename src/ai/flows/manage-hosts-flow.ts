@@ -49,16 +49,38 @@ const HostSchema = z.object({
   history: z.array(HostMetricSchema),
 });
 
-
 function parseDbHost(dbHost: any): Host {
+    const parseJson = (field: any) => {
+        if (typeof field === 'string') {
+            try {
+                if (field.trim() === '') return [];
+                return JSON.parse(field);
+            } catch (e) {
+                console.error('Failed to parse JSON field:', field, e);
+                return [];
+            }
+        }
+        return Array.isArray(field) ? field : [];
+    };
+
+    const getTimestamp = (dateValue: any): number => {
+        if (!dateValue) return 0;
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) {
+            console.warn(`Could not parse date "${dateValue}", returning 0.`);
+            return 0;
+        }
+        return date.getTime();
+    };
+
     return {
         id: dbHost.id,
         name: dbHost.name,
         ipAddress: dbHost.ip_address,
         sshPort: dbHost.ssh_port,
         status: dbHost.status,
-        createdAt: Number(dbHost.created_at),
-        containers: dbHost.containers || [], // Already parsed by mysql2 driver if column is JSON
+        createdAt: getTimestamp(dbHost.created_at),
+        containers: parseJson(dbHost.containers),
         cpuUsage: dbHost.cpu_usage,
         memoryUsage: dbHost.memory_usage,
         memoryUsedGb: dbHost.memory_used_gb,
@@ -66,7 +88,7 @@ function parseDbHost(dbHost: any): Host {
         diskUsage: dbHost.disk_usage,
         diskUsedGb: dbHost.disk_used_gb,
         diskTotalGb: dbHost.disk_total_gb,
-        history: dbHost.history || [], // Already parsed by mysql2 driver if column is JSON
+        history: parseJson(dbHost.history),
     };
 }
 
@@ -93,7 +115,7 @@ const checkDbConnectionFlow = ai.defineFlow(
 const getSavedHostsFlow = ai.defineFlow(
   {
     name: 'getSavedHostsFlow',
-    outputSchema: z.array(z.any()),
+    outputSchema: z.array(HostSchema),
   },
   async (): Promise<Host[]> => {
     const conn = await getConnection();
@@ -119,7 +141,7 @@ const saveHostFlow = ai.defineFlow(
     try {
       const query = `
         INSERT INTO hosts (id, name, ip_address, ssh_port, status, created_at, containers, history, cpu_usage, memory_usage, memory_used_gb, memory_total_gb, disk_usage, disk_used_gb, disk_total_gb)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, FROM_UNIXTIME(?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const values = [
         host.id,
@@ -127,7 +149,7 @@ const saveHostFlow = ai.defineFlow(
         host.ipAddress,
         host.sshPort ?? 22,
         host.status,
-        host.createdAt,
+        host.createdAt / 1000, // Convert ms timestamp to seconds for FROM_UNIXTIME
         JSON.stringify(host.containers || []),
         JSON.stringify(host.history || []),
         host.cpuUsage,
