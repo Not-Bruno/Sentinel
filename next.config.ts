@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
   // Diese Konfiguration stellt sicher, dass das 'node-ssh'-Paket
   // korrekt in den Server-Build für die Produktionsumgebung eingebunden wird.
   // Ohne dies schlagen SSH-Verbindungen im Docker-Container fehl.
-  serverComponentsExternalPackages: ['node-ssh'],
+  serverExternalPackages: ['node-ssh'],
 };
 
 export default nextConfig;

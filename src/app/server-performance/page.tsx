@@ -96,12 +96,15 @@ export default function ServerPerformancePage({ hosts, loading: hostsLoading }: 
   }, []);
 
   useEffect(() => {
-    if (!hostsLoading && hosts.length > 0 && !selectedHostId) {
+    if (!hostsLoading && hosts && hosts.length > 0 && !selectedHostId) {
       setSelectedHostId(hosts[0].id);
     }
   }, [hosts, hostsLoading, selectedHostId]);
 
-  const selectedHost = hosts.find((h) => h.id === selectedHostId);
+  const selectedHost = useMemo(() => {
+    if (!selectedHostId || !hosts || hosts.length === 0) return undefined;
+    return hosts.find((h) => h.id === selectedHostId);
+  }, [hosts, selectedHostId]);
 
   const chartHistory = useMemo(() => {
     if (!selectedHost?.history) return { cpu: [], memory: [], disk: [] };
@@ -137,13 +140,13 @@ export default function ServerPerformancePage({ hosts, loading: hostsLoading }: 
           <Select
             value={selectedHostId || ''}
             onValueChange={setSelectedHostId}
-            disabled={hosts.length === 0}
+            disabled={!hosts || hosts.length === 0}
           >
             <SelectTrigger className="w-full sm:w-[250px]">
               <SelectValue placeholder="Host auswählen..." />
             </SelectTrigger>
             <SelectContent>
-              {hosts.map((host) => (
+              {hosts && hosts.map((host) => (
                 <SelectItem key={host.id} value={host.id}>
                   {host.name}
                 </SelectItem>
@@ -227,5 +230,3 @@ export default function ServerPerformancePage({ hosts, loading: hostsLoading }: 
     </div>
   );
 }
-
-    

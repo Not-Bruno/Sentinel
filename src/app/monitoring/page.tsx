@@ -84,12 +84,15 @@ export default function MonitoringPage({ hosts, loading: hostsLoading }: { hosts
   }, []);
 
   useEffect(() => {
-    if (!hostsLoading && hosts.length > 0 && !selectedHostId) {
+    if (!hostsLoading && hosts && hosts.length > 0 && !selectedHostId) {
       setSelectedHostId(hosts[0].id);
     }
   }, [hosts, hostsLoading, selectedHostId]);
 
-  const selectedHost = hosts.find((h) => h.id === selectedHostId);
+  const selectedHost = useMemo(() => {
+    if (!selectedHostId || !hosts || hosts.length === 0) return undefined;
+    return hosts.find((h) => h.id === selectedHostId);
+  }, [hosts, selectedHostId]);
 
   // Reset visible entities when host changes
   useEffect(() => {
@@ -217,13 +220,13 @@ export default function MonitoringPage({ hosts, loading: hostsLoading }: { hosts
           <Select
             value={selectedHostId || ''}
             onValueChange={setSelectedHostId}
-            disabled={hosts.length === 0}
+            disabled={!hosts || hosts.length === 0}
           >
             <SelectTrigger className="w-full sm:w-[250px]">
               <SelectValue placeholder="Host auswählen..." />
             </SelectTrigger>
             <SelectContent>
-              {hosts.map((host) => (
+              {hosts && hosts.map((host) => (
                 <SelectItem key={host.id} value={host.id}>
                   {host.name}
                 </SelectItem>
@@ -293,7 +296,7 @@ export default function MonitoringPage({ hosts, loading: hostsLoading }: { hosts
                         <Separator />
                     </div>
                     
-                    {hostsLoading && !selectedHost && <div className='flex-1 flex items-center justify-center'><p className='text-muted-foreground'>Lade...</p></div>}
+                    {hostsLoading && allEntities.length === 0 && <div className='flex-1 flex items-center justify-center'><p className='text-muted-foreground'>Lade...</p></div>}
                     {!hostsLoading && allEntities.length === 0 && (
                         <div className="flex-1 flex flex-col items-center justify-center h-full rounded-lg text-center text-muted-foreground">
                             <h2 className="text-lg font-semibold">Keine Daten</h2>
@@ -393,5 +396,3 @@ export default function MonitoringPage({ hosts, loading: hostsLoading }: { hosts
     </div>
   );
 }
-
-    
