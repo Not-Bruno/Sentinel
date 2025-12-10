@@ -1,38 +1,72 @@
 'use server';
 /**
- * @fileOverview Diese Flows verwalten die persistente Liste deiner überwachten Hosts.
- *
- * - getSavedHosts: Liest die Liste der Hosts aus einer JSON-Datei.
- * - saveHosts: Schreibt die aktuelle Liste der Hosts in die JSON-Datei.
+ * @fileOverview These flows manage the hosts in the database.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-import { promises as fs } from 'fs';
-import path from 'path';
-import type { Host } from '@/lib/types';
+import { z } from 'zod';
+import { getConnection, initDB } from '@/lib/db';
+import type { Host, DatabaseStatus } from '@/lib/types';
+import { RowDataPacket } from 'mysql2';
 
-// Der Pfad zur Datei, in der wir die Host-Liste speichern.
-const HOSTS_FILE_PATH = path.resolve(process.cwd(), 'data', 'hosts.json');
+// Initialize the database and create tables if they don't exist
+initDB();
 
-/**
- * Stellt sicher, dass das `data`-Verzeichnis existiert.
- * Ist für den Fall gedacht, dass etwas schiefgeht.
- * Normalerweise wird das Verzeichnis schon im Dockerfile erstellt.
- */
-async function ensureDataDirectory() {
-  try {
-    // Wir prüfen nur den Zugriff, da das Verzeichnis bereits im Dockerfile erstellt werden sollte.
-    await fs.access(path.dirname(HOSTS_FILE_PATH));
-  } catch (error) {
-    // Falls es dennoch fehlschlägt, versuchen wir, es zu erstellen.
+const hostSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  ipAddress: z.string(),
+  sshPort: z.number().optional().nullable(),
+  status: z.enum(['online', 'offline']),
+  createdAt: z.number(),
+  containers: z.string(), // JSON string
+  cpuUsage: z.number().optional().nullable(),
+  memoryUsage: z.number().optional().nullable(),
+  memoryUsedGb: z.number().optional().nullable(),
+  memoryTotalGb: z.number().optional().nullable(),
+  diskUsage: z.number().optional().nullable(),
+  diskUsedGb: z.number().optional().nullable(),
+  diskTotalGb: z.number().optional().nullable(),
+  history: z.string(), // JSON string
+});
+
+function parseDbHost(dbHost: any): Host {
+    return {
+        ...dbHost,
+        sshPort: dbHost.ssh_port,
+        ipAddress: dbHost.ip_address,
+        createdAt: Number(dbHost.created_at),
+        cpuUsage: dbHost.cpu_usage,
+        memoryUsage: dbHost.memory_usage,
+        memoryUsedGb: dbHost.memory_used_gb,
+        memoryTotalGb: dbHost.memory_total_gb,
+        diskUsage: dbHost.disk_usage,
+        diskUsedGb: dbHost.disk_used_gb,
+        diskTotalGb: dbHost.disk_total_gb,
+        containers: JSON.parse(dbHost.containers || '[]'),
+        history: JSON.parse(dbHost.history || '[]'),
+    };
+}
+
+
+const checkDbConnectionFlow = ai.defineFlow(
+  {
+    name: 'checkDbConnectionFlow',
+    outputSchema: z.enum(['connected', 'disconnected', 'error']),
+  },
+  async (): Promise<DatabaseStatus> => {
     try {
-      await fs.mkdir(path.dirname(HOSTS_FILE_PATH), { recursive: true });
-    } catch (mkdirError) {
-        console.error('Konnte das data-Verzeichnis nicht erstellen:', mkdirError);
+      const conn = await getConnection();
+      await conn.ping();
+      conn.release();
+      return 'connected';
+    } catch (error) {
+      console.error('Database connection check failed:', error);
+      return 'error';
     }
   }
-}
+);
+
 
 const getSavedHostsFlow = ai.defineFlow(
   {
@@ -40,53 +74,127 @@ const getSavedHostsFlow = ai.defineFlow(
     outputSchema: z.array(z.any()),
   },
   async (): Promise<Host[]> => {
-    await ensureDataDirectory();
+    const conn = await getConnection();
     try {
-      // Prüfen, ob die Datei existiert.
-      await fs.access(HOSTS_FILE_PATH);
-      const fileContent = await fs.readFile(HOSTS_FILE_PATH, 'utf-8');
-      
-      // Wenn die Datei leer ist, geben wir ein leeres Array zurück.
-      if (fileContent.trim() === '') {
-        return [];
-      }
-      return JSON.parse(fileContent) as Host[];
+      const [rows] = await conn.query<RowDataPacket[]>('SELECT * FROM hosts ORDER BY created_at DESC');
+      return rows.map(parseDbHost);
     } catch (error) {
-      // Wenn die Datei nicht existiert (ENOENT) oder korrupt ist (JSON-Parse-Fehler),
-      // erstellen wir sie mit einem leeren Array.
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT' || error instanceof SyntaxError) {
-        console.log('hosts.json nicht gefunden oder korrupt. Initialisiere mit einem leeren Array.');
-        await fs.writeFile(HOSTS_FILE_PATH, JSON.stringify([], null, 2));
-        return [];
-      }
-      console.error('Fehler beim Lesen von hosts.json:', error);
-      throw new Error('Konnte die Host-Daten nicht lesen.');
+      console.error('Error fetching hosts from DB:', error);
+      throw new Error('Could not read host data.');
+    } finally {
+        conn.release();
     }
   }
 );
 
-const saveHostsFlow = ai.defineFlow(
+const saveHostFlow = ai.defineFlow(
   {
-    name: 'saveHostsFlow',
-    inputSchema: z.array(z.any()),
+    name: 'saveHostFlow',
+    inputSchema: z.any(),
   },
-  async (hosts: Host[]): Promise<void> => {
-    await ensureDataDirectory();
+  async (host: Host): Promise<void> => {
+    const conn = await getConnection();
     try {
-      const data = JSON.stringify(hosts, null, 2); // Mit Einrückung für bessere Lesbarkeit
-      await fs.writeFile(HOSTS_FILE_PATH, data, 'utf-8');
+      const query = `
+        INSERT INTO hosts (id, name, ip_address, ssh_port, status, created_at, containers, history, cpu_usage, memory_usage, memory_used_gb, memory_total_gb, disk_usage, disk_used_gb, disk_total_gb)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const values = [
+        host.id,
+        host.name,
+        host.ipAddress,
+        host.sshPort ?? 22,
+        host.status,
+        host.createdAt,
+        JSON.stringify(host.containers || []),
+        JSON.stringify(host.history || []),
+        host.cpuUsage,
+        host.memoryUsage,
+        host.memoryUsedGb,
+        host.memoryTotalGb,
+        host.diskUsage,
+        host.diskUsedGb,
+        host.diskTotalGb
+      ];
+      await conn.query(query, values);
     } catch (error) {
-      console.error('Fehler beim Speichern von hosts.json:', error);
-      throw new Error('Konnte die Host-Daten nicht speichern.');
+      console.error('Error saving host to DB:', error);
+      throw new Error('Could not save host data.');
+    } finally {
+        conn.release();
     }
   }
 );
 
-// Wrapper-Funktionen, die du in deiner Anwendung aufrufst.
+const updateHostFlow = ai.defineFlow({
+    name: 'updateHostFlow',
+    inputSchema: z.any(),
+}, async(host: Host): Promise<void> => {
+    const conn = await getConnection();
+    try {
+        const query = `
+            UPDATE hosts
+            SET name = ?, ip_address = ?, ssh_port = ?, status = ?, containers = ?, history = ?, cpu_usage = ?, memory_usage = ?, memory_used_gb = ?, memory_total_gb = ?, disk_usage = ?, disk_used_gb = ?, disk_total_gb = ?
+            WHERE id = ?
+        `;
+        const values = [
+            host.name,
+            host.ipAddress,
+            host.sshPort ?? 22,
+            host.status,
+            JSON.stringify(host.containers || []),
+            JSON.stringify(host.history || []),
+            host.cpuUsage,
+            host.memoryUsage,
+            host.memoryUsedGb,
+            host.memoryTotalGb,
+            host.diskUsage,
+            host.diskUsedGb,
+            host.diskTotalGb,
+            host.id
+        ];
+        await conn.query(query, values);
+    } catch (error) {
+        console.error('Error updating host in DB:', error);
+        throw new Error('Could not update host data.');
+    } finally {
+        conn.release();
+    }
+});
+
+const deleteHostFlow = ai.defineFlow({
+    name: 'deleteHostFlow',
+    inputSchema: z.string(),
+}, async(hostId: string): Promise<void> => {
+    const conn = await getConnection();
+    try {
+        await conn.query('DELETE FROM hosts WHERE id = ?', [hostId]);
+    } catch (error) {
+        console.error('Error deleting host from DB:', error);
+        throw new Error('Could not delete host data.');
+    } finally {
+        conn.release();
+    }
+});
+
+
+// Wrapper functions
 export async function getSavedHosts(): Promise<Host[]> {
     return getSavedHostsFlow();
 }
 
-export async function saveHosts(hosts: Host[]): Promise<void> {
-    return saveHostsFlow(hosts);
+export async function saveHost(host: Host): Promise<void> {
+    return saveHostFlow(host);
+}
+
+export async function updateHost(host: Host): Promise<void> {
+    return updateHostFlow(host);
+}
+
+export async function deleteHost(hostId: string): Promise<void> {
+    return deleteHostFlow(hostId);
+}
+
+export async function checkDbConnection(): Promise<DatabaseStatus> {
+    return checkDbConnectionFlow();
 }

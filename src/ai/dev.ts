@@ -1,3 +1,6 @@
 // Flows will be imported for their side effects in this file.
 import './flows/get-host-containers-flow';
 import './flows/manage-hosts-flow';
+import { initDB } from '@/lib/db';
+
+initDB();

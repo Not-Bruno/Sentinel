@@ -2,13 +2,15 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "./theme-toggle";
 import { AddHostDialog } from "../dashboard/add-host-dialog";
+import { useHosts } from "@/hooks/use-hosts";
+import { DatabaseStatusIndicator } from "./database-status-indicator";
 
 interface HeaderProps {
   children: React.ReactNode;
-  addHost: (data: { name: string; ipAddress: string; sshPort: number }) => void;
 }
 
-export function Header({ children, addHost }: HeaderProps) {
+export function Header({ children }: HeaderProps) {
+  const { addHost, dbStatus } = useHosts();
   
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 border-b shrink-0 bg-background sm:px-6 md:px-8">
@@ -24,6 +26,7 @@ export function Header({ children, addHost }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        <DatabaseStatusIndicator status={dbStatus} />
         <AddHostDialog onAddHost={addHost} />
         <ThemeToggle />
       </div>

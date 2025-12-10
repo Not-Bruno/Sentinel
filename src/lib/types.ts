@@ -65,3 +65,5 @@ export interface Host {
 
   history: HostMetric[];   // Verlauf der Systemmetriken
 }
+
+export type DatabaseStatus = 'connected' | 'disconnected' | 'error';

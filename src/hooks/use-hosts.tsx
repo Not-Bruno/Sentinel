@@ -3,16 +3,17 @@
 import React, { createContext, useCallback, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from './use-toast';
 import { getHostData } from '@/ai/flows/get-host-containers-flow';
-import { getSavedHosts, saveHosts } from '@/ai/flows/manage-hosts-flow';
-import type { Host } from '@/lib/types';
+import { getSavedHosts, saveHost, updateHost, deleteHost, checkDbConnection } from '@/ai/flows/manage-hosts-flow';
+import type { Host, DatabaseStatus } from '@/lib/types';
 
-const MAX_HISTORY_AGE = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const MAX_HISTORY_ENTRIES = 100; // Limit the number of history entries per host
 
 interface HostContextType {
   hosts: Host[];
   loading: boolean;
+  dbStatus: DatabaseStatus;
   addHost: (data: { name: string; ipAddress: string; sshPort: number }) => Promise<void>;
-  removeHost: (hostId: string) => void;
+  removeHost: (hostId: string) => Promise<void>;
   refreshAllHosts: (currentHosts: Host[]) => Promise<void>;
 }
 
@@ -21,7 +22,17 @@ const HostContext = createContext<HostContextType | undefined>(undefined);
 export function HostProvider({ children }: { children: ReactNode }) {
   const [hosts, setHosts] = useState<Host[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dbStatus, setDbStatus] = useState<DatabaseStatus>('disconnected');
   const { toast } = useToast();
+
+  const checkDatabaseStatus = useCallback(async () => {
+    try {
+      const status = await checkDbConnection();
+      setDbStatus(status);
+    } catch (error) {
+      setDbStatus('error');
+    }
+  }, []);
 
   const fetchHostData = useCallback(async (host: Host): Promise<Host> => {
     try {
@@ -45,13 +56,10 @@ export function HostProvider({ children }: { children: ReactNode }) {
         memoryUsage: data.memoryUsage ?? 0,
         containers: containerMetrics,
       };
+      
+      const updatedHistory = [...(host.history || []), newHistoryEntry].slice(-MAX_HISTORY_ENTRIES);
 
-      const recentHistory = (host.history || []).filter(
-        (entry) => now - entry.timestamp < MAX_HISTORY_AGE
-      );
-      const updatedHistory = [...recentHistory, newHistoryEntry];
-
-      return { 
+      const updatedHost: Host = { 
         ...host, 
         status: 'online', 
         containers: data.containers,
@@ -64,6 +72,10 @@ export function HostProvider({ children }: { children: ReactNode }) {
         diskTotalGb: data.diskTotalGb,
         history: updatedHistory,
       };
+
+      await updateHost(updatedHost);
+      return updatedHost;
+
     } catch (error) {
       console.error(`Failed to fetch data for host ${host.name}:`, error);
       toast({
@@ -71,12 +83,12 @@ export function HostProvider({ children }: { children: ReactNode }) {
         description: `Die Daten für den Host konnten nicht abgerufen werden.`,
         variant: 'destructive',
       });
-      return { 
+      const offlineHost = { 
         ...host, 
         status: 'offline', 
-        containers: host.containers || [],
-        history: host.history || [],
       };
+      await updateHost(offlineHost);
+      return offlineHost;
     }
   }, [toast]);
 
@@ -90,32 +102,18 @@ export function HostProvider({ children }: { children: ReactNode }) {
       history: [],
     };
 
-    // Add host to UI immediately for responsiveness
-    setHosts(prevHosts => [newHost, ...prevHosts]);
-
     try {
-        const hostWithData = await fetchHostData(newHost);
-        
-        // Update the host with real data and save all hosts
-        setHosts(prevHosts => {
-            const updatedHosts = prevHosts.map(h => h.id === newHost.id ? hostWithData : h);
-            
-            saveHosts(updatedHosts).then(() => {
-                 toast({
-                    title: "Host hinzugefügt",
-                    description: `Der Host "${newHost.name}" wird jetzt überwacht.`,
-                });
-            }).catch(err => {
-                console.error("Failed to save hosts after adding:", err);
-                toast({
-                    title: "Fehler beim Speichern",
-                    description: "Der neue Host konnte nicht persistent gespeichert werden.",
-                    variant: "destructive"
-                });
-            });
-
-            return updatedHosts;
-        });
+      await saveHost(newHost);
+      setHosts(prevHosts => [newHost, ...prevHosts]);
+      toast({
+          title: "Host hinzugefügt",
+          description: `Der Host "${newHost.name}" wird jetzt überwacht.`,
+      });
+      
+      // Fetch initial data async
+      fetchHostData(newHost).then(fetchedHost => {
+        setHosts(prev => prev.map(h => h.id === newHost.id ? fetchedHost : h));
+      });
 
     } catch (error) {
          console.error("Error adding host:", error);
@@ -124,28 +122,25 @@ export function HostProvider({ children }: { children: ReactNode }) {
             description: `Der Host "${newHost.name}" konnte nicht hinzugefügt werden.`,
             variant: "destructive"
          });
-         // If fetching data fails, remove the host from the UI
-         setHosts(prevHosts => prevHosts.filter(h => h.id !== newHost.id));
     }
   }, [fetchHostData, toast]);
 
-  const removeHost = useCallback((hostId: string) => {
-    setHosts(currentHosts => {
-        const updatedHosts = currentHosts.filter(h => h.id !== hostId);
-        saveHosts(updatedHosts).catch(err => {
-            console.error("Failed to save hosts after removal:", err);
-            toast({
-                title: "Fehler beim Speichern",
-                description: "Die Änderung konnte nicht persistent gespeichert werden.",
-                variant: "destructive"
-            });
-        });
-        toast({
-            title: "Host entfernt",
-            description: "Der Host wird nicht mehr überwacht.",
-        });
-        return updatedHosts;
-    });
+  const removeHost = useCallback(async (hostId: string) => {
+    try {
+      await deleteHost(hostId);
+      setHosts(currentHosts => currentHosts.filter(h => h.id !== hostId));
+      toast({
+          title: "Host entfernt",
+          description: "Der Host wird nicht mehr überwacht.",
+      });
+    } catch (error) {
+      console.error("Failed to remove host:", error);
+      toast({
+          title: "Fehler beim Entfernen",
+          description: "Der Host konnte nicht entfernt werden.",
+          variant: "destructive"
+      });
+    }
   }, [toast]);
 
   const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
@@ -153,7 +148,6 @@ export function HostProvider({ children }: { children: ReactNode }) {
     try {
         const refreshedHosts = await Promise.all(currentHosts.map(host => fetchHostData(host)));
         setHosts(refreshedHosts);
-        await saveHosts(refreshedHosts);
     } catch (error) {
         console.error("Error refreshing hosts:", error);
     }
@@ -162,26 +156,10 @@ export function HostProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadInitialData = async () => {
       setLoading(true);
+      await checkDatabaseStatus();
       try {
         const initialHosts = await getSavedHosts();
-        if (initialHosts && initialHosts.length > 0) {
-          const results = await Promise.allSettled(initialHosts.map(host => fetchHostData(host)));
-          
-          const refreshedHosts = results.map((result, index) => {
-            if (result.status === 'fulfilled') {
-              return result.value;
-            } else {
-              console.error(`Failed to fetch initial data for host ${initialHosts[index].name}:`, result.reason);
-              return { ...initialHosts[index], status: 'offline' } as Host;
-            }
-          });
-
-          setHosts(refreshedHosts);
-          await saveHosts(refreshedHosts);
-        } else {
-          // If no hosts are saved, the list is just empty.
-          setHosts([]);
-        }
+        setHosts(initialHosts);
       } catch (error) {
         console.error("Failed to load initial host data:", error);
         toast({
@@ -189,7 +167,7 @@ export function HostProvider({ children }: { children: ReactNode }) {
           description: "Die gespeicherte Host-Liste konnte nicht geladen werden.",
           variant: "destructive",
         });
-        setHosts([]); // Ensure hosts is an array in case of error
+        setHosts([]);
       } finally {
         setLoading(false);
       }
@@ -198,7 +176,7 @@ export function HostProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const value = { hosts, loading, addHost, removeHost, refreshAllHosts };
+  const value = { hosts, loading, addHost, removeHost, refreshAllHosts, dbStatus };
 
   return <HostContext.Provider value={value}>{children}</HostContext.Provider>;
 }
