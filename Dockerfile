@@ -1,50 +1,46 @@
-
-# ===== Build Stage =====
-# Verwende ein Node.js-Image, um die Anwendung zu bauen.
+# Stage 1: Build-Umgebung
+# Nutzt ein schlankes Node.js-Image auf Alpine-Basis, um alle Abhängigkeiten zu installieren und die App zu bauen.
 FROM node:20-alpine AS builder
-
-# Setze das Arbeitsverzeichnis
 WORKDIR /app
 
-# Kopiere package.json und package-lock.json
+# Kopiere package.json und package-lock.json (falls vorhanden)
 COPY package*.json ./
 
-# Installiere die Dependencies
+# Installiere alle Dependencies (einschließlich devDependencies für den Build-Prozess)
 RUN npm install
 
-# Kopiere den gesamten Quellcode
+# Kopiere den gesamten Quellcode in das Image
 COPY . .
 
-# Setze die Umgebungsvariable für den Build
-ENV NODE_ENV=production
-
-# Baue die Next.js-Anwendung
+# Baue die Next.js-Anwendung für die Produktion
 RUN npm run build
 
-# Entferne devDependencies, um Platz zu sparen
+# Entferne devDependencies, um die node_modules-Größe zu reduzieren, bevor wir sie kopieren
 RUN npm prune --production
 
-
-# ===== Production Stage =====
-# Verwende ein schlankes Basis-Image für die Produktion.
+# Stage 2: Produktions-Umgebung
+# Nutzt dasselbe schlanke Basis-Image, aber ohne die Build-Tools und den Quellcode.
 FROM node:20-alpine AS production
-
-# Setze das Arbeitsverzeichnis
 WORKDIR /app
 
-# Kopiere die gebaute Anwendung und die Dependencies aus dem Builder-Stage
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/data ./data
-COPY --from=builder /app/package.json ./package.json
-
-# Exponiere den Port, auf dem die Anwendung läuft
-EXPOSE 3000
-
-# Setze die Umgebungsvariable für die Produktion
+# Setze die Umgebungsvariable auf Produktion
 ENV NODE_ENV=production
 
+# Erstelle ein Verzeichnis für persistente Daten, falls es nicht existiert
+RUN mkdir -p /app/data
+
+# Kopiere die gebaute Anwendung aus dem Builder-Stage
+# Das .next-Verzeichnis enthält den gesamten optimierten Code.
+COPY --from=builder /app/.next ./.next
+# Kopiere nur die notwendigen Production-Abhängigkeiten
+COPY --from=builder /app/node_modules ./node_modules
+# Kopiere die Konfigurationsdateien
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.ts ./next.config.ts
+
+
+# Die Anwendung läuft standardmäßig auf Port 3000
+EXPOSE 3000
+
 # Der Befehl zum Starten der Anwendung
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
