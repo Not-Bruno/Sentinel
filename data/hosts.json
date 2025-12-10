@@ -7,8 +7,8 @@
     "status": "online",
     "createdAt": 1672531200000,
     "containers": [],
-    "cpuUsage": 68.4,
-    "memoryUsage": 38,
+    "cpuUsage": 93.1,
+    "memoryUsage": 47,
     "history": [
       {
         "timestamp": 1765281870404,
@@ -3250,9 +3250,21 @@
         "cpuUsage": 68.4,
         "memoryUsage": 38,
         "containers": {}
+      },
+      {
+        "timestamp": 1765362116092,
+        "cpuUsage": 91.3,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765362439695,
+        "cpuUsage": 93.1,
+        "memoryUsage": 47,
+        "containers": {}
       }
     ],
-    "memoryUsedGb": 3,
+    "memoryUsedGb": 3.6,
     "memoryTotalGb": 7.8,
     "diskUsedGb": 12,
     "diskTotalGb": 3.9,
