@@ -4,10 +4,9 @@ import { HostCard } from "./host-card";
 interface DashboardProps {
   hosts: Host[];
   onRemoveHost: (hostId: string) => void;
-  onRemoveContainer: (hostId: string, containerId: string) => void;
 }
 
-export function Dashboard({ hosts, onRemoveHost, onRemoveContainer }: DashboardProps) {
+export function Dashboard({ hosts, onRemoveHost }: DashboardProps) {
   if (!hosts || hosts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full rounded-lg border-2 border-dashed bg-card py-12 text-center text-muted-foreground mt-8">
@@ -25,12 +24,9 @@ export function Dashboard({ hosts, onRemoveHost, onRemoveContainer }: DashboardP
             key={host.id} 
             host={host} 
             onRemoveHost={onRemoveHost}
-            onRemoveContainer={onRemoveContainer} 
           />
         ))}
       </div>
     </div>
   );
 }
-
-    

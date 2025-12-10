@@ -88,11 +88,13 @@ export default function RootLayout({
       history: [],
     };
 
+    // Add host to UI immediately for responsiveness
     setHosts(prevHosts => [newHost, ...prevHosts]);
 
     try {
         const hostWithData = await fetchHostData(newHost);
         
+        // Update the host with real data and save all hosts
         setHosts(prevHosts => {
             const updatedHosts = prevHosts.map(h => h.id === newHost.id ? hostWithData : h);
             
@@ -120,12 +122,13 @@ export default function RootLayout({
             description: `Der Host "${newHost.name}" konnte nicht hinzugefügt werden.`,
             variant: "destructive"
          });
+         // If fetching data fails, remove the host from the UI
          setHosts(prevHosts => prevHosts.filter(h => h.id !== newHost.id));
     }
 }, [fetchHostData, toast]);
 
 
-  const removeHost = (hostId: string) => {
+  const removeHost = useCallback((hostId: string) => {
     setHosts(currentHosts => {
         const updatedHosts = currentHosts.filter(h => h.id !== hostId);
         saveHosts(updatedHosts).catch(err => {
@@ -142,7 +145,7 @@ export default function RootLayout({
         });
         return updatedHosts;
     });
-  };
+  }, [toast]);
 
   const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
     if (!currentHosts || currentHosts.length === 0) return;

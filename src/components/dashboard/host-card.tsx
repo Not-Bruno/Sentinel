@@ -16,7 +16,6 @@ import {
 interface HostCardProps {
   host: Host;
   onRemoveHost: (hostId: string) => void;
-  onRemoveContainer: (hostId: string, containerId: string) => void;
 }
 
 const statusConfig: Record<HostStatus, { icon: React.ElementType, color: string, label: string }> = {
@@ -108,7 +107,7 @@ const CompactContainerItem = ({ container }: { container: Container }) => {
   )
 }
 
-export function HostCard({ host, onRemoveHost, onRemoveContainer }: HostCardProps) {
+export function HostCard({ host, onRemoveHost }: HostCardProps) {
   const { icon: Icon, color, label } = statusConfig[host.status];
   
   return (
