@@ -4,7 +4,7 @@ import React, { createContext, useCallback, useContext, useState, useEffect, Rea
 import { useToast } from './use-toast';
 import { getHostData } from '@/ai/flows/get-host-containers-flow';
 import { getSavedHosts, saveHost, updateHost, deleteHost, checkDbConnection } from '@/ai/flows/manage-hosts-flow';
-import type { Host, DatabaseStatus } from '@/lib/types';
+import type { Host, DatabaseStatus, HostStatus } from '@/lib/types';
 
 const MAX_HISTORY_ENTRIES = 100; // Limit the number of history entries per host
 
@@ -85,7 +85,7 @@ export function HostProvider({ children }: { children: ReactNode }) {
       });
       const offlineHost = { 
         ...host, 
-        status: 'offline', 
+        status: 'offline' as HostStatus,
       };
       await updateHost(offlineHost);
       return offlineHost;
@@ -160,6 +160,9 @@ export function HostProvider({ children }: { children: ReactNode }) {
       try {
         const initialHosts = await getSavedHosts();
         setHosts(initialHosts);
+        if (initialHosts.length > 0) {
+          refreshAllHosts(initialHosts);
+        }
       } catch (error) {
         console.error("Failed to load initial host data:", error);
         toast({
