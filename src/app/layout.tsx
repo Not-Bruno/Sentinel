@@ -83,17 +83,25 @@ export default function RootLayout({
       history: [],
     };
     
+    // 1. Add visually and start fetching data
     setHosts(currentHosts => [newHost, ...currentHosts]);
-
     const hostWithData = await fetchHostData(newHost);
-    
+
+    // 2. Update with fetched data and save persistently
     setHosts(currentHosts => {
       const updatedHosts = currentHosts.map(h => h.id === newHost.id ? hostWithData : h);
-      saveHosts(updatedHosts).catch(err => console.error("Failed to save hosts:", err));
+      saveHosts(updatedHosts).catch(err => {
+          console.error("Failed to save hosts:", err)
+          toast({
+              title: "Fehler beim Speichern",
+              description: "Der neue Host konnte nicht persistent gespeichert werden.",
+              variant: "destructive"
+          })
+      });
       return updatedHosts;
     });
 
-  }, [fetchHostData]);
+  }, [fetchHostData, toast]);
 
   const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
     if (!currentHosts || currentHosts.length === 0) return;

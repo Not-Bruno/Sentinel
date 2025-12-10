@@ -52,9 +52,10 @@ const getSavedHostsFlow = ai.defineFlow(
       }
       return JSON.parse(fileContent) as Host[];
     } catch (error) {
-      // Wenn die Datei nicht existiert, erstellen wir sie mit einem leeren Array.
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        console.log('hosts.json nicht gefunden. Initialisiere sie mit einem leeren Array.');
+      // Wenn die Datei nicht existiert (ENOENT) oder korrupt ist (JSON-Parse-Fehler),
+      // erstellen wir sie mit einem leeren Array.
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT' || error instanceof SyntaxError) {
+        console.log('hosts.json nicht gefunden oder korrupt. Initialisiere mit einem leeren Array.');
         await fs.writeFile(HOSTS_FILE_PATH, JSON.stringify([], null, 2));
         return [];
       }
