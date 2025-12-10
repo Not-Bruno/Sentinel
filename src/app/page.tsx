@@ -5,12 +5,14 @@ interface HomePageProps {
   hosts: Host[];
   setHosts: (hosts: Host[]) => void;
   addHost: (data: { name: string; ipAddress: string; sshPort: number }) => void;
+  loading: boolean;
+  refreshAllHosts: (hosts: Host[]) => void;
 }
 
-export default function Home({ hosts, setHosts, addHost }: HomePageProps) {
+export default function Home({ hosts, setHosts, addHost, loading, refreshAllHosts }: HomePageProps) {
   return (
     <div className="p-4 sm:p-6 md:p-8">
-      <SentinelPage hosts={hosts} setHosts={setHosts} addHost={addHost} />
+      <SentinelPage hosts={hosts} setHosts={setHosts} addHost={addHost} loading={loading} refreshAllHosts={refreshAllHosts} />
     </div>
   );
 }

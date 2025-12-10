@@ -1,13 +1,15 @@
 'use client';
 import './globals.css';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Providers } from '@/components/providers';
 import { MainNav } from '@/components/layout/main-nav';
 import { Header } from '@/components/layout/header';
 import type { Host } from '@/lib/types';
 import { getHostData } from '@/ai/flows/get-host-containers-flow';
-import { saveHosts } from '@/ai/flows/manage-hosts-flow';
+import { getSavedHosts, saveHosts } from '@/ai/flows/manage-hosts-flow';
 import { useToast } from '@/hooks/use-toast';
+
+const MAX_HISTORY_AGE = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 export default function RootLayout({
   children,
@@ -15,6 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [hosts, setHosts] = useState<Host[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchHostData = useCallback(async (host: Host): Promise<Host> => {
@@ -41,7 +44,7 @@ export default function RootLayout({
       };
 
       const recentHistory = (host.history || []).filter(
-        (entry) => now - entry.timestamp < 24 * 60 * 60 * 1000
+        (entry) => now - entry.timestamp < MAX_HISTORY_AGE
       );
       const updatedHistory = [...recentHistory, newHistoryEntry];
 
@@ -92,10 +95,45 @@ export default function RootLayout({
 
   }, [fetchHostData]);
 
+  const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
+    if (!currentHosts || currentHosts.length === 0) return;
+    try {
+        const refreshedHosts = await Promise.all(currentHosts.map(host => fetchHostData(host)));
+        setHosts(refreshedHosts);
+        await saveHosts(refreshedHosts);
+    } catch (error) {
+        console.error("Error refreshing hosts:", error);
+    }
+  }, [fetchHostData]);
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setLoading(true);
+      try {
+        const initialHosts = await getSavedHosts();
+        setHosts(initialHosts);
+        if (initialHosts.length > 0) {
+          await refreshAllHosts(initialHosts);
+        }
+      } catch (error) {
+        console.error("Failed to load initial host data:", error);
+        toast({
+          title: "Error Loading Hosts",
+          description: "Could not load the saved host list.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
       // @ts-ignore
-      return React.cloneElement(child, { hosts, setHosts, addHost });
+      return React.cloneElement(child, { hosts, setHosts, addHost, loading, refreshAllHosts });
     }
     return child;
   });
