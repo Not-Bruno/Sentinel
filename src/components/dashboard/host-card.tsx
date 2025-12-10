@@ -125,14 +125,14 @@ export function HostCard({ host, onRemoveHost }: HostCardProps) {
               <p className="text-xs text-muted-foreground mt-1">Überwacht seit: {formatUptime(host.createdAt)}</p>
             </div>
           </div>
-          {host.ipAddress !== '0.0.0.1' && (
-            <div className="absolute top-2 right-2">
-                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => onRemoveHost(host.id)}>
-                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive"/>
-                    <span className="sr-only">Remove host</span>
-                </Button>
-            </div>
-          )}
+          
+          <div className="absolute top-2 right-2">
+              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => onRemoveHost(host.id)}>
+                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive"/>
+                  <span className="sr-only">Remove host</span>
+              </Button>
+          </div>
+          
         </CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
           {host.status === 'online' && (

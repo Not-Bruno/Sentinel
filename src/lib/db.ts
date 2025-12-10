@@ -48,7 +48,6 @@ export async function initDB() {
   } catch (error) {
     console.error('[DB] Database initialization failed:', error);
     // Do not exit the process, allow the app to handle the disconnected state
-    // process.exit(1); 
   } finally {
     if (connection) {
       connection.release();
