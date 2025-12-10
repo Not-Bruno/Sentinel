@@ -7,7 +7,7 @@
     "status": "online",
     "createdAt": 1672531200000,
     "containers": [],
-    "cpuUsage": 91.7,
+    "cpuUsage": 63.6,
     "memoryUsage": 40,
     "history": [
       {
@@ -1640,6 +1640,606 @@
       {
         "timestamp": 1765351830374,
         "cpuUsage": 91.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351836029,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351840678,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351845756,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351850660,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351855697,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351860718,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351865670,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351870703,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351875643,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351880689,
+        "cpuUsage": 70.8,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351885706,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351890727,
+        "cpuUsage": 63.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351895688,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351900673,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351905651,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351910676,
+        "cpuUsage": 66.7,
+        "memoryUsage": 41,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351915650,
+        "cpuUsage": 68.2,
+        "memoryUsage": 41,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351920680,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351925701,
+        "cpuUsage": 65.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351930703,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351935661,
+        "cpuUsage": 68.2,
+        "memoryUsage": 41,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351940730,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351945659,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351950709,
+        "cpuUsage": 63.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351955723,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351960649,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351965701,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351970696,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351975665,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351980751,
+        "cpuUsage": 70,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351985668,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351990713,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351995662,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352000651,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352005665,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352010726,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352015694,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352020652,
+        "cpuUsage": 72.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352025735,
+        "cpuUsage": 63.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352030718,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352035691,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352040730,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352046113,
+        "cpuUsage": 68.2,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352050638,
+        "cpuUsage": 65,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352055645,
+        "cpuUsage": 69.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352060685,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352065706,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352070704,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352075696,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352080680,
+        "cpuUsage": 63.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352085649,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352090673,
+        "cpuUsage": 69.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352095706,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352100729,
+        "cpuUsage": 63.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352105711,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352110691,
+        "cpuUsage": 63.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352115748,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352120725,
+        "cpuUsage": 70,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352125685,
+        "cpuUsage": 63.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352130672,
+        "cpuUsage": 70,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352135647,
+        "cpuUsage": 71.4,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352140653,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352145681,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352150784,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352155709,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352160651,
+        "cpuUsage": 69.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352165749,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352170676,
+        "cpuUsage": 70,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352175663,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352180648,
+        "cpuUsage": 69.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352185669,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352190663,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352195757,
+        "cpuUsage": 71.4,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352200736,
+        "cpuUsage": 63.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352205678,
+        "cpuUsage": 71.4,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352210696,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352215671,
+        "cpuUsage": 70,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352220702,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352225715,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352230657,
+        "cpuUsage": 70,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352235644,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352240646,
+        "cpuUsage": 72.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352245701,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352250678,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352255663,
+        "cpuUsage": 65,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352260749,
+        "cpuUsage": 65,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352265689,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352270664,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352275638,
+        "cpuUsage": 68.4,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352280697,
+        "cpuUsage": 61.9,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352285644,
+        "cpuUsage": 66.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352290734,
+        "cpuUsage": 71.4,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352295701,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352300637,
+        "cpuUsage": 71.4,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352305641,
+        "cpuUsage": 72.7,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352310675,
+        "cpuUsage": 69.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352315711,
+        "cpuUsage": 68.2,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352320751,
+        "cpuUsage": 69.6,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352325727,
+        "cpuUsage": 70,
+        "memoryUsage": 40,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765352330691,
+        "cpuUsage": 63.6,
         "memoryUsage": 40,
         "containers": {}
       }

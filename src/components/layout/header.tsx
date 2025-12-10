@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LineChart } from "lucide-react";
+import { LineChart, ShieldCheck } from "lucide-react";
 import { AddHostDialog } from "@/components/dashboard/add-host-dialog";
 import { Logo } from "@/components/logo";
 import { Button } from "../ui/button";
@@ -23,6 +23,12 @@ export function Header({ onAddHost }: HeaderProps) {
           <Link href="/monitoring">
             <LineChart className="h-4 w-4" />
             <span className="sr-only">Monitoring</span>
+          </Link>
+        </Button>
+         <Button variant="outline" size="icon" asChild>
+          <Link href="/security">
+            <ShieldCheck className="h-4 w-4" />
+            <span className="sr-only">Security</span>
           </Link>
         </Button>
         <AddHostDialog onAddHost={onAddHost} />
