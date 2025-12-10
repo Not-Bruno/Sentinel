@@ -47,14 +47,17 @@ docker-compose up --build -d
 Dieser Befehl baut die Docker-Images für Sentinel und die MariaDB-Datenbank, startet die Container im Hintergrund (`-d`) und stellt sicher, dass sie bei einem Neustart des Systems automatisch wieder gestartet werden.
 
 #### 3. Sentinel öffnen
-Öffne deinen Webbrowser und navigiere zu `http://localhost:3000`. Du solltest das Sentinel-Dashboard sehen, das bereits die Container deines lokalen Host-Systems anzeigt.
+Öffne deinen Webbrowser und navigiere zu `http://localhost:3000`. Du solltest das Sentinel-Dashboard sehen.
 
 ---
 
 ## ⚙️ Konfiguration
 
+### Datenbank
+Die Datenbank wird automatisch durch `docker-compose` konfiguriert und erfordert keine manuelle Einrichtung. Die Standard-Zugangsdaten sind in der `docker-compose.yml` definiert und können bei Bedarf dort angepasst werden.
+
 ### Lokaler Host
-Standardmäßig liest Sentinel die Docker-Informationen deines Host-Systems über den Docker-Socket (`/var/run/docker.sock`). Dies wird in der `docker-compose.yml` durch das Mounten des Sockets ermöglicht. Für die Überwachung deines lokalen Systems ist **keine weitere Konfiguration nötig**.
+Standardmäßig liest Sentinel die Docker-Informationen deines Host-Systems über den Docker-Socket (`/var/run/docker.sock`). Dies wird in der `docker-compose.yml` durch das Mounten des Sockets ermöglicht. Um deinen lokalen Host zu überwachen, füge ihn im UI mit der speziellen IP-Adresse `0.0.0.1` hinzu.
 
 ### Remote-Hosts (via SSH)
 Um zusätzliche Server zu überwachen, muss Sentinel Zugriff über einen privaten SSH-Schlüssel erhalten.
