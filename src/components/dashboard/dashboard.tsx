@@ -23,15 +23,24 @@ export function Dashboard({ hosts, onRemoveHost, onRemoveContainer, addHost }: D
   }
   
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
-      {hosts.map(host => (
-        <HostCard 
-          key={host.id} 
-          host={host} 
-          onRemoveHost={onRemoveHost}
-          onRemoveContainer={onRemoveContainer} 
-        />
-      ))}
+    <div className="space-y-6">
+       <div className="flex justify-between items-center">
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight">Infrastruktur-Übersicht</h1>
+                <p className="text-muted-foreground text-sm">Ein Überblick über den Zustand all deiner Hosts.</p>
+            </div>
+            <AddHostDialog onAddHost={addHost} />
+       </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
+        {hosts.map(host => (
+          <HostCard 
+            key={host.id} 
+            host={host} 
+            onRemoveHost={onRemoveHost}
+            onRemoveContainer={onRemoveContainer} 
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -33,7 +33,7 @@ interface CombinedResourceChartProps {
 const generateColor = (index: number, total: number) => {
   if (index === 0) return "hsl(var(--chart-1))"; // Host is always the first color
   // Distribute other colors across the hue spectrum
-  const hue = (200 + (index - 1) * (160 / (total - 1))) % 360;
+  const hue = (200 + (index - 1) * (160 / (total > 1 ? total - 1 : 1))) % 360;
   return `hsl(${hue}, 70%, 50%)`;
 };
 
@@ -56,10 +56,10 @@ export function CombinedResourceChart({ history, entities, dataKey, unit }: Comb
       
       entities.forEach(entity => {
         let value: number | null = null;
-        if (entity.type === 'host') {
-          value = entry[dataKey] ?? null;
-        } else {
-          value = entry.containers?.[entity.id]?.[dataKey] ?? null;
+        if (entity.type === 'host' && entry[dataKey] !== undefined) {
+          value = entry[dataKey];
+        } else if (entity.type === 'container' && entry.containers?.[entity.id]?.[dataKey] !== undefined) {
+          value = entry.containers[entity.id][dataKey];
         }
         point[entity.id] = value;
       });
@@ -74,7 +74,7 @@ export function CombinedResourceChart({ history, entities, dataKey, unit }: Comb
     return (
       <div className="flex flex-col items-center justify-center h-80 text-muted-foreground p-4 text-center border-2 border-dashed rounded-lg">
         <p className='font-semibold'>Keine Diagrammdaten verfügbar</p>
-        <p className='text-sm'>Wähle mindestens eine Datenquelle aus, um den Graphen anzuzeigen.</p>
+        <p className='text-sm'>Wähle mindestens eine Datenquelle aus oder ändere den Zeitraum.</p>
       </div>
     );
   }

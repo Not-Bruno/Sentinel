@@ -18,7 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { getContainerLogo } from '@/components/logos';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Activity, CircleCheck, HardDrive, AlertTriangle, Cpu } from 'lucide-react';
+import { Activity, CircleCheck, HardDrive, AlertTriangle, Cpu, MemoryStick } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -148,39 +148,41 @@ export default function MonitoringPage() {
     });
   };
 
-  const getAverage = (entityId: string): number => {
-    if (!filteredHistory || filteredHistory.length === 0) return 0;
-    
-    let total = 0;
-    let count = 0;
+    const getAverage = (metric: MetricType, entityId: string): number => {
+      if (!filteredHistory || filteredHistory.length === 0) return 0;
+      
+      let total = 0;
+      let count = 0;
 
-    for (const entry of filteredHistory) {
-      let value: number | undefined;
-      if (entityId === 'host') {
-        value = entry[metricType];
-      } else {
-        value = entry.containers?.[entityId]?.[metricType];
-      }
+      for (const entry of filteredHistory) {
+        let value: number | undefined;
+        if (entityId === 'host') {
+          value = entry[metric];
+        } else if (entry.containers && entry.containers[entityId]) {
+          value = entry.containers[entityId][metric];
+        }
 
-      if (value !== undefined && value !== null) {
-        total += value;
-        count++;
+        if (value !== undefined && value !== null) {
+          total += value;
+          count++;
+        }
       }
+      return count > 0 ? parseFloat((total / count).toFixed(1)) : 0;
     }
-    return count > 0 ? total / count : 0;
-  }
 
-  const getCurrentValue = (entityId: string): number => {
+  const getCurrentValue = (metric: MetricType, entityId: string): number => {
     if (!filteredHistory || filteredHistory.length === 0) return 0;
     
     const lastEntry = filteredHistory[filteredHistory.length - 1];
+    if (!lastEntry) return 0;
+
     let value: number | undefined;
     if (entityId === 'host') {
-        value = lastEntry?.[metricType];
-    } else {
-        value = lastEntry?.containers?.[entityId]?.[metricType];
+        value = lastEntry[metric];
+    } else if (lastEntry.containers && lastEntry.containers[entityId]) {
+        value = lastEntry.containers[entityId][metric];
     }
-    return value ?? 0;
+    return value ? parseFloat(value.toFixed(1)) : 0;
   }
 
   const runningContainers = useMemo(() => {
@@ -188,10 +190,11 @@ export default function MonitoringPage() {
   }, [selectedHost]);
 
   const averageUtilization = useMemo(() => {
-    const hostCpu = getAverage('host');
-    const hostMem = getAverage('host');
-    return (hostCpu + hostMem) / 2;
-  }, [filteredHistory, metricType]);
+    const hostCpu = getAverage('cpuUsage', 'host');
+    const hostMem = getAverage('memoryUsage', 'host');
+    if (isNaN(hostCpu) || isNaN(hostMem)) return 0;
+    return parseFloat(((hostCpu + hostMem) / 2).toFixed(1));
+  }, [filteredHistory]);
   
   return (
     <div className="flex flex-col flex-1 p-4 sm:p-6 md:p-8 space-y-6">
@@ -275,7 +278,7 @@ export default function MonitoringPage() {
                     <CardTitle>Container-Hierarchie</CardTitle>
                     <CardDescription>Wähle Container zum Anzeigen im Graph</CardDescription>
                 </CardHeader>
-                <CardContent className='flex-1 flex flex-col'>
+                <CardContent className='flex-1 flex flex-col min-h-0'>
                     <div className='-mx-2 -mt-2'>
                         <div className='flex items-center justify-end px-2 py-1 gap-2'>
                             <Button variant='link' size='sm' className='text-xs' onClick={() => setVisibleEntities(new Set(allEntities.map(e => e.id)))}>Alle</Button>
@@ -286,13 +289,13 @@ export default function MonitoringPage() {
                     
                     {loading && <div className='flex-1 flex items-center justify-center'><p className='text-muted-foreground'>Lade...</p></div>}
                     {!loading && allEntities.length === 0 && (
-                        <div className="flex-1 flex flex-col items-center justify-center h-full rounded-lg text-center text-muted-foreground mt-8">
+                        <div className="flex-1 flex flex-col items-center justify-center h-full rounded-lg text-center text-muted-foreground">
                             <h2 className="text-lg font-semibold">Keine Daten</h2>
                             <p className="mt-1 text-sm">Für diesen Host wurden keine Container gefunden.</p>
                         </div>
                     )}
-                     <ScrollArea className='flex-1'>
-                        <div className="mt-4 space-y-2">
+                     <ScrollArea className='flex-1 -mx-4'>
+                        <div className="px-4 mt-4 space-y-2">
                            {allEntities.map((entity) => {
                              const Logo = entity.type === 'host' ? HardDrive : getContainerLogo(selectedHost?.containers.find(c => c.id === entity.id)?.image || '');
                              return (
@@ -329,8 +332,8 @@ export default function MonitoringPage() {
                     <TableRow>
                         <TableHead>Container</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className='text-right'>CPU</TableHead>
-                        <TableHead className='text-right'>RAM</TableHead>
+                        <TableHead className='text-right'>CPU (Aktuell)</TableHead>
+                        <TableHead className='text-right'>RAM (Aktuell)</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -360,8 +363,8 @@ export default function MonitoringPage() {
                                 <span className='capitalize'>{container.status}</span>
                                 </div>
                             </TableCell>
-                            <TableCell className="text-right font-mono">{getCurrentValue(container.id).toFixed(1)}%</TableCell>
-                            <TableCell className="text-right font-mono">{getAverage(container.id).toFixed(1)}%</TableCell>
+                            <TableCell className="text-right font-mono">{getCurrentValue('cpuUsage', container.id).toFixed(1)}%</TableCell>
+                            <TableCell className="text-right font-mono">{getCurrentValue('memoryUsage', container.id).toFixed(1)}%</TableCell>
                         </TableRow>
                     )})}
                     {!loading && selectedHost?.containers.length === 0 && (

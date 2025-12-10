@@ -48,7 +48,7 @@ const StatCard = ({ title, value, icon: Icon, unit, description, isLoading }: { 
     );
 };
 
-const ResourceChart = ({ data, dataKey, color, unit }: { data: any[], dataKey: string, color: string, unit: string }) => {
+const ResourceChart = ({ data, dataKey, color, unit, title }: { data: any[], dataKey: string, color: string, unit: string, title: string }) => {
     const chartConfig = {
       [dataKey]: {
         label: dataKey,
@@ -58,7 +58,10 @@ const ResourceChart = ({ data, dataKey, color, unit }: { data: any[], dataKey: s
 
     return (
         <Card>
-            <CardContent className="pt-6">
+             <CardHeader>
+                <CardTitle className='text-base'>{title}</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
                 <ChartContainer config={chartConfig} className='h-48 w-full'>
                     <ResponsiveContainer>
                         <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -166,16 +169,16 @@ export default function ServerPerformancePage() {
       </div>
 
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard isLoading={loading} title="CPU-Temperatur" value="42" unit='°C' icon={Gauge} description="Simulierter Wert" />
-        <StatCard isLoading={loading} title="Betriebszeit" value={formatUptime(selectedHost?.createdAt ?? Date.now())} icon={Clock} description="Seit Hinzufügen des Hosts" />
+        <StatCard isLoading={loading} title="CPU-Auslastung" value={selectedHost?.cpuUsage?.toFixed(1) ?? 'N/A'} unit='%' icon={Cpu} description="Aktuelle CPU-Nutzung" />
+        <StatCard isLoading={loading} title="RAM-Auslastung" value={`${selectedHost?.memoryUsedGb?.toFixed(1) ?? 'N/A'} / ${selectedHost?.memoryTotalGb?.toFixed(1) ?? 'N/A'} GB`} icon={MemoryStick} description={`${selectedHost?.memoryUsage?.toFixed(1) ?? 'N/A'}% genutzt`} />
+        <StatCard isLoading={loading} title="Festplatten-Auslastung" value={`${selectedHost?.diskUsedGb?.toFixed(1) ?? 'N/A'} / ${selectedHost?.diskTotalGb?.toFixed(1) ?? 'N/A'} GB`} icon={HardDrive} description={`${selectedHost?.diskUsage?.toFixed(1) ?? 'N/A'}% genutzt`} />
         <StatCard isLoading={loading} title="Aktive Prozesse" value={runningContainers} icon={Activity} description={`${selectedHost?.containers.length ?? 0} Container insgesamt`} />
-        <StatCard isLoading={loading} title="Warnungen" value="0" icon={AlertTriangle} description="Keine kritischen Fehler" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <ResourceChart data={chartHistory.cpu} dataKey="cpuUsage" color="1" unit="%" />
-        <ResourceChart data={chartHistory.memory} dataKey="memoryUsage" color="2" unit="%" />
-        <ResourceChart data={chartHistory.disk} dataKey="diskUsage" color="4" unit="%" />
+        <ResourceChart data={chartHistory.cpu} dataKey="cpuUsage" title="CPU-Verlauf (1h)" color="1" unit="%" />
+        <ResourceChart data={chartHistory.memory} dataKey="memoryUsage" title="RAM-Verlauf (1h)" color="2" unit="%" />
+        <ResourceChart data={chartHistory.disk} dataKey="diskUsage" title="Festplatten-Verlauf (1h)" color="4" unit="%" />
       </div>
 
        <Card>
