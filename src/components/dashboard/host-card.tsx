@@ -17,15 +17,39 @@ const statusConfig: Record<HostStatus, { icon: React.ElementType, color: string,
   offline: { icon: XCircle, color: 'text-destructive', label: 'Offline' },
 };
 
-const ResourceBar = ({ icon: Icon, label, value, color }: { icon: React.ElementType, label: string, value?: number, color: string }) => {
+const ResourceBar = ({ 
+  icon: Icon, 
+  label, 
+  value, 
+  color,
+  used,
+  total,
+  unit = 'GB'
+}: { 
+  icon: React.ElementType, 
+  label: string, 
+  value?: number, 
+  color: string,
+  used?: number,
+  total?: number,
+  unit?: string,
+}) => {
   const displayValue = value !== undefined ? `${value.toFixed(0)}%` : 'N/A';
+  
+  const absoluteValue = used !== undefined && total !== undefined
+    ? `(${used.toFixed(1)} / ${total.toFixed(1)} ${unit})`
+    : '';
+
   return (
     <div className="flex items-center gap-3">
       <Icon className="w-4 h-4 text-muted-foreground" />
       <div className="flex-1">
-        <div className="flex justify-between text-xs mb-1">
+        <div className="flex justify-between items-baseline text-xs mb-1">
           <span className="font-medium text-muted-foreground">{label}</span>
-          <span className="font-mono">{displayValue}</span>
+          <div className="font-mono">
+            <span>{displayValue} </span>
+            <span className="text-muted-foreground">{absoluteValue}</span>
+          </div>
         </div>
         <Progress value={value} indicatorClassName={color} />
       </div>
@@ -61,8 +85,22 @@ export function HostCard({ host, onRemoveHost, onRemoveContainer }: HostCardProp
         {host.status === 'online' && (
           <div className="space-y-3 px-2">
             <ResourceBar icon={Cpu} label="CPU" value={host.cpuUsage} color="bg-cyan-500" />
-            <ResourceBar icon={MemoryStick} label="RAM" value={host.memoryUsage} color="bg-amber-500" />
-            <ResourceBar icon={HardDrive} label="Disk" value={host.diskUsage} color="bg-violet-500" />
+            <ResourceBar 
+              icon={MemoryStick} 
+              label="RAM" 
+              value={host.memoryUsage} 
+              color="bg-amber-500"
+              used={host.memoryUsedGb}
+              total={host.memoryTotalGb}
+            />
+            <ResourceBar 
+              icon={HardDrive} 
+              label="Disk" 
+              value={host.diskUsage} 
+              color="bg-violet-500"
+              used={host.diskUsedGb}
+              total={host.diskTotalGb}
+            />
           </div>
         )}
 

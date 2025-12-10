@@ -17,8 +17,6 @@ export interface Container {
   status: ContainerStatus; // Der aktuelle Zustand des Containers.
   uptime: string;      // Die Laufzeit des Containers als Text (z.B. "Up 5 hours").
   createdAt: number;   // Der Zeitstempel, wann der Container erstellt wurde (in Millisekunden).
-  cpuUsage?: number;
-  memoryUsage?: number;
 }
 
 /**
@@ -46,8 +44,16 @@ export interface Host {
   status: HostStatus;      // Der aktuelle Online-Status des Hosts.
   createdAt: number;       // Der Zeitstempel, wann du den Host hinzugefügt hast (in Millisekunden).
   containers: Container[]; // Eine Liste der Docker-Container, die auf diesem Host laufen.
+  
   cpuUsage?: number;       // CPU-Auslastung in Prozent.
+
   memoryUsage?: number;    // Arbeitsspeicher-Auslastung in Prozent.
+  memoryUsedGb?: number;   // Genutzter Arbeitsspeicher in GB.
+  memoryTotalGb?: number;  // Gesamter Arbeitsspeicher in GB.
+
   diskUsage?: number;      // Festplatten-Auslastung in Prozent.
+  diskUsedGb?: number;     // Genutzter Festplattenspeicher in GB.
+  diskTotalGb?: number;    // Gesamter Festplattenspeicher in GB.
+
   history?: HostMetric[];   // Verlauf der Systemmetriken
 }

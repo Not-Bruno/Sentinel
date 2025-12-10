@@ -46,7 +46,11 @@ export default function SentinelPage() {
         containers: data.containers,
         cpuUsage: data.cpuUsage,
         memoryUsage: data.memoryUsage,
+        memoryUsedGb: data.memoryUsedGb,
+        memoryTotalGb: data.memoryTotalGb,
         diskUsage: data.diskUsage,
+        diskUsedGb: data.diskUsedGb,
+        diskTotalGb: data.diskTotalGb,
         history: updatedHistory,
       };
     } catch (error) {
@@ -55,9 +59,6 @@ export default function SentinelPage() {
         ...host, 
         status: 'offline', 
         containers: host.containers || [], // Keep old container data on error
-        cpuUsage: undefined,
-        memoryUsage: undefined,
-        diskUsage: undefined,
         history: host.history || [], // Keep old history on error
       };
     }

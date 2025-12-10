@@ -26,7 +26,11 @@ export interface GetHostDataOutput {
   containers: Container[];
   cpuUsage?: number;
   memoryUsage?: number;
+  memoryUsedGb?: number;
+  memoryTotalGb?: number;
   diskUsage?: number;
+  diskUsedGb?: number;
+  diskTotalGb?: number;
 }
 
 // Dies ist eine Wrapper-Funktion, die den eigentlichen Flow aufruft.
@@ -42,11 +46,14 @@ const getHostDataFlow = ai.defineFlow(
   },
   async (input): Promise<GetHostDataOutput> => {
     // Befehle zum Abrufen der Systemmetriken und Container-Infos
+    // We use awk to get specific values. The output is space-separated.
     const commands = {
       containers: "docker ps -a --format '{{json .}}'",
       cpu: `top -bn1 | grep "Cpu(s)" | sed "s/.*, *\\([0-9.]*\\)%* id.*/\\1/" | awk '{print 100 - $1}'`,
-      memory: `free | awk 'NR==2{printf "%.2f", $3*100/$2 }'`,
-      disk: `df -h / | awk 'NR==2{print $5}' | sed 's/%//'`,
+      // memory: Gibt zurück: total_kb used_kb
+      memory: `free | awk 'NR==2{printf "%d %d", $2, $3 }'`,
+      // disk: Gibt zurück: total_gb used_gb percentage%
+      disk: `df -h / --output=size,used,pcent | awk 'NR==2{print $1, $2, $3}'`,
     };
 
     const executeCommand = (command: string): Promise<string> => {
@@ -54,7 +61,6 @@ const getHostDataFlow = ai.defineFlow(
         exec(command, (error, stdout, stderr) => {
           if (error) {
             console.error(`Fehler bei lokaler Ausführung von "${command}":`, stderr);
-            // Wir lehnen das Promise nicht ab, sondern geben einen leeren String zurück, damit die UI nicht abstürzt
             return resolve(''); 
           }
           resolve(stdout.trim());
@@ -62,24 +68,70 @@ const getHostDataFlow = ai.defineFlow(
       });
     };
 
+    const parseDfOutput = (output: string): { diskUsedGb?: number; diskTotalGb?: number; diskUsage?: number } => {
+        if (!output) return {};
+        // Example output: "458G 151G 34%"
+        const parts = output.replace(/G/g, ' ').replace(/M/g, ' / 1024').replace(/K/g, ' / 1024 / 1024').replace(/%/g, '').split(/\s+/);
+        if (parts.length < 3) return {};
+        
+        const totalGb = parseFloat(parts[0]);
+        const usedGb = parseFloat(parts[1]);
+        const usage = parseFloat(parts[2]);
+
+        return {
+            diskTotalGb: isNaN(totalGb) ? undefined : totalGb,
+            diskUsedGb: isNaN(usedGb) ? undefined : usedGb,
+            diskUsage: isNaN(usage) ? undefined : usage,
+        };
+    };
+
+    const parseFreeOutput = (output: string): { memoryUsedGb?: number; memoryTotalGb?: number; memoryUsage?: number } => {
+        if (!output) return {};
+        // Example output: "16028592 5592348" (in KB)
+        const parts = output.split(' ');
+        if (parts.length < 2) return {};
+
+        const totalKb = parseInt(parts[0], 10);
+        const usedKb = parseInt(parts[1], 10);
+        if (isNaN(totalKb) || isNaN(usedKb) || totalKb === 0) return {};
+
+        const totalGb = parseFloat((totalKb / 1024 / 1024).toFixed(1));
+        const usedGb = parseFloat((usedKb / 1024 / 1024).toFixed(1));
+        const usage = parseFloat(((usedKb / totalKb) * 100).toFixed(0));
+
+        return {
+            memoryTotalGb: totalGb,
+            memoryUsedGb: usedGb,
+            memoryUsage: usage,
+        };
+    }
+
+    const executeAndParse = async (executor: (cmd: string) => Promise<string>) => {
+        const [containerOutput, cpuOutput, memoryOutput, diskOutput] = await Promise.all([
+            executor(commands.containers),
+            executor(commands.cpu),
+            executor(commands.memory),
+            executor(commands.disk),
+        ]);
+
+        const containers = containerOutput ? parseDockerPsJson(containerOutput) : [];
+        const cpuUsage = cpuOutput ? parseFloat(cpuOutput) : undefined;
+        const memoryData = parseFreeOutput(memoryOutput);
+        const diskData = parseDfOutput(diskOutput);
+
+        return {
+            containers,
+            cpuUsage,
+            ...memoryData,
+            ...diskData,
+        };
+    };
+
+
     // Sonderfall für den lokalen Host: Hier nutzen wir den Docker-Socket.
     if (input.ipAddress === '0.0.0.1') {
       console.log(`[LOKAL] Führe Befehle direkt über den Docker-Socket aus.`);
-      const [containerOutput, cpuOutput, memoryOutput, diskOutput] = await Promise.all([
-        executeCommand(commands.containers),
-        executeCommand(commands.cpu),
-        executeCommand(commands.memory),
-        executeCommand(commands.disk),
-      ]);
-      
-      const containers = containerOutput ? parseDockerPsJson(containerOutput) : [];
-      
-      return {
-        containers,
-        cpuUsage: cpuOutput ? parseFloat(cpuOutput) : undefined,
-        memoryUsage: memoryOutput ? parseFloat(memoryOutput) : undefined,
-        diskUsage: diskOutput ? parseFloat(diskOutput) : undefined,
-      };
+      return executeAndParse(executeCommand);
     }
 
     // Standard-Logik für Remote-Hosts über SSH
@@ -99,26 +151,19 @@ const getHostDataFlow = ai.defineFlow(
         privateKey: process.env.SSH_PRIVATE_KEY.replace(/\\n/g, '\n'),
       });
       
-      const combinedCommand = `${commands.containers}; echo "---SPLIT---"; ${commands.cpu}; echo "---SPLIT---"; ${commands.memory}; echo "---SPLIT---"; ${commands.disk}`;
-      const result = await ssh.execCommand(combinedCommand);
-
-      if (result.code !== 0) {
-        console.error('SSH-Befehl fehlgeschlagen:', result.stderr);
-        throw new Error(`Fehler beim Ausführen des Befehls auf Host ${input.ipAddress}: ${result.stderr}`);
-      }
-      
-      const [containerOutput, cpuOutput, memoryOutput, diskOutput] = result.stdout.split('---SPLIT---');
-
-      return {
-        containers: parseDockerPsJson(containerOutput || ''),
-        cpuUsage: cpuOutput ? parseFloat(cpuOutput.trim()) : undefined,
-        memoryUsage: memoryOutput ? parseFloat(memoryOutput.trim()) : undefined,
-        diskUsage: diskOutput ? parseFloat(diskOutput.trim()) : undefined,
+      const sshExecutor = async (command: string) => {
+        const result = await ssh.execCommand(command);
+        if (result.code !== 0) {
+            console.error(`Fehler bei SSH-Ausführung von "${command}":`, result.stderr);
+            return '';
+        }
+        return result.stdout.trim();
       };
+
+      return await executeAndParse(sshExecutor);
 
     } catch (error) {
       console.error(`Fehler bei SSH-Verbindung oder Befehl für Host ${input.ipAddress}:`, error);
-      // Im Fehlerfall werfen wir den Fehler weiter, damit er in der aufrufenden Funktion behandelt werden kann
       throw error;
     } finally {
       if (ssh.isConnected()) {
@@ -161,7 +206,7 @@ function parseDockerPsJson(stdout: string): Container[] {
               name: dockerInfo.Names,
               image: dockerInfo.Image,
               status: status,
-              uptime: dockerInfo.Status, // Beinhaltet die menschenlesbare Laufzeit wie "Up 5 hours"
+              uptime: dockerInfo.Status,
               createdAt: !isNaN(createdAtTimestamp) ? createdAtTimestamp : Date.now(),
           };
         } catch (e) {
