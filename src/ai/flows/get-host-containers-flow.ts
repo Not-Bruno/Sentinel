@@ -208,8 +208,17 @@ function parseDockerPsJson(stdout: string): Container[] {
           if (dockerInfo.State === 'running') {
             status = 'running';
           } else if (dockerInfo.State === 'exited' || dockerInfo.State === 'created') {
-            status = 'stopped';
+            // Prüfe den Exit-Code, um zwischen "gestoppt" und "Fehler" zu unterscheiden
+            const exitCodeMatch = dockerInfo.Status.match(/Exited \((\d+)\)/);
+            if (exitCodeMatch) {
+              const exitCode = parseInt(exitCodeMatch[1], 10);
+              status = exitCode === 0 ? 'stopped' : 'error';
+            } else {
+              // Fallback für Zustände wie "Created"
+              status = 'stopped';
+            }
           } else {
+            // Alle anderen Zustände (restarting, removing, paused, dead) werden als Fehler gewertet.
             status = 'error';
           }
           
