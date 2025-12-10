@@ -78,7 +78,7 @@ export default function RootLayout({
     }
   }, [toast]);
 
-  const addHost = useCallback(async (data: { name: string; ipAddress: string; sshPort: number }) => {
+ const addHost = useCallback(async (data: { name: string; ipAddress: string; sshPort: number }) => {
     const newHost: Host = {
       id: `host-${Date.now()}`,
       ...data,
@@ -88,24 +88,18 @@ export default function RootLayout({
       history: [],
     };
 
-    setHosts(currentHosts => [newHost, ...currentHosts]);
-    
+    // Add host to UI immediately for responsiveness
+    const updatedHosts = [newHost, ...hosts];
+    setHosts(updatedHosts);
+
     try {
         const hostWithData = await fetchHostData(newHost);
         
-        setHosts(currentHosts => {
-            const finalHosts = currentHosts.map(h => (h.id === newHost.id ? hostWithData : h));
-            
-            saveHosts(finalHosts).catch(err => {
-                console.error("Failed to save hosts:", err);
-                toast({
-                    title: "Fehler beim Speichern",
-                    description: "Die Host-Liste konnte nicht persistent gespeichert werden.",
-                    variant: "destructive"
-                });
-            });
-            return finalHosts;
-        });
+        // Final update with fetched data
+        const finalHosts = hosts.map(h => (h.id === newHost.id ? hostWithData : h));
+        setHosts(finalHosts);
+        
+        await saveHosts(finalHosts);
 
         toast({
             title: "Host hinzugefügt",
@@ -119,10 +113,11 @@ export default function RootLayout({
             description: `Der Host "${newHost.name}" konnte nicht hinzugefügt werden.`,
             variant: "destructive"
          });
-         // Remove the host from UI if fetching data fails
-         setHosts(currentHosts => currentHosts.filter(h => h.id !== newHost.id));
+         // Rollback: Remove the host from UI if fetching data fails
+         const rolledBackHosts = hosts.filter(h => h.id !== newHost.id);
+         setHosts(rolledBackHosts);
     }
-}, [fetchHostData, toast]);
+}, [hosts, fetchHostData, toast]);
 
 
   const removeHost = (hostId: string) => {
@@ -163,15 +158,17 @@ export default function RootLayout({
         if (initialHosts.length > 0) {
           const refreshedHosts = await Promise.all(initialHosts.map(host => fetchHostData(host)));
           setHosts(refreshedHosts);
+          // Save the refreshed data back
           await saveHosts(refreshedHosts);
         } else {
+          // If no hosts are saved, the state is already an empty array
           setHosts([]);
         }
       } catch (error) {
         console.error("Failed to load initial host data:", error);
         toast({
-          title: "Error Loading Hosts",
-          description: "Could not load the saved host list.",
+          title: "Fehler beim Laden der Hosts",
+          description: "Die gespeicherte Host-Liste konnte nicht geladen werden.",
           variant: "destructive",
         });
       } finally {
