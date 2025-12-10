@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { getSavedHosts } from '@/ai/flows/manage-hosts-flow';
-import type { Host } from '@/lib/types';
+import type { Host, HostMetric } from '@/lib/types';
 import {
   Select,
   SelectContent,
@@ -72,10 +71,8 @@ const StatCard = ({ title, value, icon: Icon, unit, description, trend, isLoadin
 };
 
 
-export default function MonitoringPage() {
-  const [hosts, setHosts] = useState<Host[]>([]);
+export default function MonitoringPage({ hosts, loading: hostsLoading }: { hosts: Host[], loading: boolean }) {
   const [selectedHostId, setSelectedHostId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>('1h');
   const [metricType, setMetricType] = useState<MetricType>('cpuUsage');
   const [visibleEntities, setVisibleEntities] = useState<Set<string>>(new Set(['host']));
@@ -87,22 +84,10 @@ export default function MonitoringPage() {
   }, []);
 
   useEffect(() => {
-    async function loadHosts() {
-      try {
-        setLoading(true);
-        const savedHosts = await getSavedHosts();
-        setHosts(savedHosts);
-        if (savedHosts.length > 0 && !selectedHostId) {
-          setSelectedHostId(savedHosts[0].id);
-        }
-      } catch (error) {
-        console.error('Failed to load hosts for monitoring:', error);
-      } finally {
-        setLoading(false);
-      }
+    if (!hostsLoading && hosts.length > 0 && !selectedHostId) {
+      setSelectedHostId(hosts[0].id);
     }
-    loadHosts();
-  }, [selectedHostId]);
+  }, [hosts, hostsLoading, selectedHostId]);
 
   const selectedHost = hosts.find((h) => h.id === selectedHostId);
 
@@ -123,10 +108,30 @@ export default function MonitoringPage() {
     if (!selectedHost?.history) return [];
     
     const selectedHours = timeRangeOptions.find(t => t.value === timeRange)?.hours;
-    if (selectedHours === Infinity) return selectedHost.history;
+    const history = selectedHours === Infinity
+      ? selectedHost.history
+      : selectedHost.history.filter(entry => now - entry.timestamp < (selectedHours || 24) * 60 * 60 * 1000);
+    
+    // Simple aggregation for large datasets
+    if (history.length > 100) {
+      const aggregated: HostMetric[] = [];
+      const chunkSize = Math.ceil(history.length / 100);
+      for (let i = 0; i < history.length; i += chunkSize) {
+        const chunk = history.slice(i, i + chunkSize);
+        const avgEntry = chunk.reduce((acc, entry, _, arr) => {
+          acc.timestamp = entry.timestamp;
+          acc.cpuUsage += entry.cpuUsage / arr.length;
+          acc.memoryUsage += entry.memoryUsage / arr.length;
+          // Note: Container metrics aggregation is simplified here
+          acc.containers = entry.containers; 
+          return acc;
+        }, { timestamp: 0, cpuUsage: 0, memoryUsage: 0, containers: {} });
+        aggregated.push(avgEntry);
+      }
+      return aggregated;
+    }
 
-    const cutoff = now - (selectedHours || 24) * 60 * 60 * 1000;
-    return selectedHost.history.filter(entry => entry.timestamp >= cutoff);
+    return history;
   }, [selectedHost, timeRange, now]);
 
   const allEntities = useMemo<ChartEntity[]>(() => {
@@ -206,7 +211,7 @@ export default function MonitoringPage() {
             </h1>
             <p className='text-muted-foreground text-sm'>Umfassende Multi-Container-Performance-Vergleiche</p>
         </div>
-        {loading ? (
+        {hostsLoading ? (
           <Skeleton className="h-10 w-full sm:w-[250px]" />
         ) : (
           <Select
@@ -229,10 +234,10 @@ export default function MonitoringPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard isLoading={loading} title="Laufende Container" value={runningContainers.toString()} icon={Activity} description={`${selectedHost?.containers?.length ?? 0} Container insgesamt`} />
-        <StatCard isLoading={loading} title="Ressourceneffizienz" value={averageUtilization.toFixed(1)} unit='%' icon={Cpu} description="Durchschnittliche Auslastung" />
-        <StatCard isLoading={loading} title="Performance-Anomalien" value="0" icon={AlertTriangle} description="Erkannte Abweichungen" />
-        <StatCard isLoading={loading} title="Host-Gesundheit" value={selectedHost?.status === 'online' ? '100' : '0'} unit='%' icon={CircleCheck} description={selectedHost?.status === 'online' ? "Host ist erreichbar" : "Host ist offline"} />
+        <StatCard isLoading={hostsLoading} title="Laufende Container" value={runningContainers.toString()} icon={Activity} description={`${selectedHost?.containers?.length ?? 0} Container insgesamt`} />
+        <StatCard isLoading={hostsLoading} title="Ressourceneffizienz" value={averageUtilization.toFixed(1)} unit='%' icon={Cpu} description="Durchschnittliche Auslastung" />
+        <StatCard isLoading={hostsLoading} title="Performance-Anomalien" value="0" icon={AlertTriangle} description="Erkannte Abweichungen" />
+        <StatCard isLoading={hostsLoading} title="Host-Gesundheit" value={selectedHost?.status === 'online' ? '100' : '0'} unit='%' icon={CircleCheck} description={selectedHost?.status === 'online' ? "Host ist erreichbar" : "Host ist offline"} />
       </div>
 
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
@@ -288,8 +293,8 @@ export default function MonitoringPage() {
                         <Separator />
                     </div>
                     
-                    {loading && <div className='flex-1 flex items-center justify-center'><p className='text-muted-foreground'>Lade...</p></div>}
-                    {!loading && allEntities.length === 0 && (
+                    {hostsLoading && !selectedHost && <div className='flex-1 flex items-center justify-center'><p className='text-muted-foreground'>Lade...</p></div>}
+                    {!hostsLoading && allEntities.length === 0 && (
                         <div className="flex-1 flex flex-col items-center justify-center h-full rounded-lg text-center text-muted-foreground">
                             <h2 className="text-lg font-semibold">Keine Daten</h2>
                             <p className="mt-1 text-sm">Für diesen Host wurden keine Container gefunden.</p>
@@ -340,7 +345,7 @@ export default function MonitoringPage() {
                     </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {loading && [...Array(3)].map((_, i) => (
+                    {hostsLoading && [...Array(3)].map((_, i) => (
                         <TableRow key={i}>
                             <TableCell><Skeleton className='h-5 w-32'/></TableCell>
                             <TableCell><Skeleton className='h-5 w-40'/></TableCell>
@@ -349,7 +354,7 @@ export default function MonitoringPage() {
                             <TableCell className='text-right'><Skeleton className='h-5 w-16 ml-auto'/></TableCell>
                         </TableRow>
                     ))}
-                    {!loading && selectedHost?.containers.map(container => {
+                    {!hostsLoading && selectedHost?.containers.map(container => {
                         const Logo = getContainerLogo(container.image || '');
                         return(
                         <TableRow key={container.id}>
@@ -374,7 +379,7 @@ export default function MonitoringPage() {
                             <TableCell className="text-right font-mono">{getCurrentValue('memoryUsage', container.id).toFixed(1)}%</TableCell>
                         </TableRow>
                     )})}
-                    {!loading && selectedHost?.containers?.length === 0 && (
+                    {!hostsLoading && selectedHost?.containers?.length === 0 && (
                         <TableRow>
                             <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
                                 Keine Container auf diesem Host gefunden.
@@ -388,3 +393,5 @@ export default function MonitoringPage() {
     </div>
   );
 }
+
+    

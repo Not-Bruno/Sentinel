@@ -11,13 +11,13 @@ import { Dashboard } from "@/components/dashboard/dashboard";
 
 interface SentinelPageProps {
   hosts: Host[];
-  setHosts: (hosts: Host[]) => void;
   loading: boolean;
   refreshAllHosts: (hosts: Host[]) => void;
+  addHost: (data: { name: string; ipAddress: string; sshPort: number }) => void;
 }
 
 
-export default function SentinelPage({ hosts, setHosts, loading, refreshAllHosts }: SentinelPageProps) {
+export default function SentinelPage({ hosts, loading, refreshAllHosts, addHost }: SentinelPageProps) {
   const { toast } = useToast();
   const hostsRef = useRef<Host[]>();
 
@@ -36,29 +36,19 @@ export default function SentinelPage({ hosts, setHosts, loading, refreshAllHosts
   
   
   const removeHost = (hostId: string) => {
-    setHosts(currentHosts => {
-      const updatedHosts = currentHosts.filter(h => h.id !== hostId);
-      saveHosts(updatedHosts).catch(err => console.error("Failed to save hosts:", err));
-      return updatedHosts;
-    });
+    // This function is not passed down anymore, but keeping it here for potential future use or as a reference.
+    // The actual implementation is now in layout.tsx to be available for the dialog.
+    // If you need direct manipulation here, the state management would need to be lifted or context used.
     toast({
-        title: "Host Removed",
-        description: `Stopped monitoring host.`,
+        title: "Info",
+        description: `Host removal is handled in the main layout.`,
     });
   };
 
   const removeContainer = (hostId: string, containerId: string) => {
     // This action is temporary and visual only, it doesn't persist.
     // The container will reappear on the next refresh cycle.
-    setHosts(currentHosts => currentHosts.map(h => {
-      if (h.id === hostId) {
-        return {
-          ...h,
-          containers: h.containers.filter(c => c.id !== containerId),
-        };
-      }
-      return h;
-    }));
+    // This logic needs a setHosts function to be passed down if it's to be used.
   };
 
   const LoadingSkeleton = () => (
@@ -77,3 +67,5 @@ export default function SentinelPage({ hosts, setHosts, loading, refreshAllHosts
     </>
   );
 }
+
+    

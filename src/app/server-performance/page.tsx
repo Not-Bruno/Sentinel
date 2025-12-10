@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { getSavedHosts } from '@/ai/flows/manage-hosts-flow';
 import type { Container, Host, HostMetric } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -87,10 +86,8 @@ const ResourceChart = ({ data, dataKey, color, unit, title }: { data: any[], dat
     )
 }
 
-export default function ServerPerformancePage() {
-  const [hosts, setHosts] = useState<Host[]>([]);
+export default function ServerPerformancePage({ hosts, loading: hostsLoading }: { hosts: Host[], loading: boolean }) {
   const [selectedHostId, setSelectedHostId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -99,22 +96,10 @@ export default function ServerPerformancePage() {
   }, []);
 
   useEffect(() => {
-    async function loadHosts() {
-      try {
-        setLoading(true);
-        const savedHosts = await getSavedHosts();
-        setHosts(savedHosts);
-        if (savedHosts.length > 0 && !selectedHostId) {
-          setSelectedHostId(savedHosts[0].id);
-        }
-      } catch (error) {
-        console.error('Failed to load hosts for monitoring:', error);
-      } finally {
-        setLoading(false);
-      }
+    if (!hostsLoading && hosts.length > 0 && !selectedHostId) {
+      setSelectedHostId(hosts[0].id);
     }
-    loadHosts();
-  }, [selectedHostId]);
+  }, [hosts, hostsLoading, selectedHostId]);
 
   const selectedHost = hosts.find((h) => h.id === selectedHostId);
 
@@ -134,7 +119,7 @@ export default function ServerPerformancePage() {
 
 
   const runningContainers = useMemo(() => {
-    return selectedHost?.containers.filter(c => c.status === 'running').length ?? 0;
+    return selectedHost?.containers?.filter(c => c.status === 'running').length ?? 0;
   }, [selectedHost]);
 
   return (
@@ -146,7 +131,7 @@ export default function ServerPerformancePage() {
             </h1>
             <p className='text-muted-foreground text-sm'>Detaillierte Analyse der Host-Metriken.</p>
         </div>
-        {loading ? (
+        {hostsLoading ? (
           <Skeleton className="h-10 w-full sm:w-[250px]" />
         ) : (
           <Select
@@ -169,10 +154,10 @@ export default function ServerPerformancePage() {
       </div>
 
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard isLoading={loading} title="CPU-Auslastung" value={selectedHost?.cpuUsage?.toFixed(1) ?? 'N/A'} unit='%' icon={Cpu} description="Aktuelle CPU-Nutzung" />
-        <StatCard isLoading={loading} title="RAM-Auslastung" value={`${selectedHost?.memoryUsedGb?.toFixed(1) ?? 'N/A'} / ${selectedHost?.memoryTotalGb?.toFixed(1) ?? 'N/A'} GB`} icon={MemoryStick} description={`${selectedHost?.memoryUsage?.toFixed(1) ?? 'N/A'}% genutzt`} />
-        <StatCard isLoading={loading} title="Festplatten-Auslastung" value={`${selectedHost?.diskUsedGb?.toFixed(1) ?? 'N/A'} / ${selectedHost?.diskTotalGb?.toFixed(1) ?? 'N/A'} GB`} icon={HardDrive} description={`${selectedHost?.diskUsage?.toFixed(1) ?? 'N/A'}% genutzt`} />
-        <StatCard isLoading={loading} title="Aktive Prozesse" value={runningContainers} icon={Activity} description={`${selectedHost?.containers.length ?? 0} Container insgesamt`} />
+        <StatCard isLoading={hostsLoading} title="CPU-Auslastung" value={selectedHost?.cpuUsage?.toFixed(1) ?? 'N/A'} unit='%' icon={Cpu} description="Aktuelle CPU-Nutzung" />
+        <StatCard isLoading={hostsLoading} title="RAM-Auslastung" value={`${selectedHost?.memoryUsedGb?.toFixed(1) ?? 'N/A'} / ${selectedHost?.memoryTotalGb?.toFixed(1) ?? 'N/A'} GB`} icon={MemoryStick} description={`${selectedHost?.memoryUsage?.toFixed(1) ?? 'N/A'}% genutzt`} />
+        <StatCard isLoading={hostsLoading} title="Festplatten-Auslastung" value={`${selectedHost?.diskUsedGb?.toFixed(1) ?? 'N/A'} / ${selectedHost?.diskTotalGb?.toFixed(1) ?? 'N/A'} GB`} icon={HardDrive} description={`${selectedHost?.diskUsage?.toFixed(1) ?? 'N/A'}% genutzt`} />
+        <StatCard isLoading={hostsLoading} title="Aktive Prozesse" value={runningContainers} icon={Activity} description={`${selectedHost?.containers?.length ?? 0} Container insgesamt`} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -197,7 +182,7 @@ export default function ServerPerformancePage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {loading && [...Array(3)].map((_, i) => (
+                        {hostsLoading && [...Array(3)].map((_, i) => (
                             <TableRow key={i}>
                                 <TableCell><Skeleton className='h-5 w-32'/></TableCell>
                                 <TableCell><Skeleton className='h-5 w-24'/></TableCell>
@@ -205,7 +190,7 @@ export default function ServerPerformancePage() {
                                 <TableCell className='text-right'><Skeleton className='h-5 w-16 ml-auto'/></TableCell>
                             </TableRow>
                         ))}
-                        {!loading && selectedHost?.containers.map(container => {
+                        {!hostsLoading && selectedHost?.containers.map(container => {
                             const Logo = getContainerLogo(container.image || '');
                             return(
                             <TableRow key={container.id}>
@@ -227,7 +212,7 @@ export default function ServerPerformancePage() {
                                 <TableCell className="text-right font-mono">{container.memoryUsage?.toFixed(1) ?? 'N/A'}%</TableCell>
                             </TableRow>
                         )})}
-                        {!loading && selectedHost?.containers.length === 0 && (
+                        {!hostsLoading && selectedHost?.containers?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
                                     Keine laufenden Prozesse gefunden.
@@ -242,3 +227,5 @@ export default function ServerPerformancePage() {
     </div>
   );
 }
+
+    

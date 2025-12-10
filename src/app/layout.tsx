@@ -83,25 +83,35 @@ export default function RootLayout({
       history: [],
     };
     
-    // 1. Add visually and start fetching data
+    // 1. Add visually and fetch initial data
     setHosts(currentHosts => [newHost, ...currentHosts]);
     const hostWithData = await fetchHostData(newHost);
-
+    
     // 2. Update with fetched data and save persistently
     setHosts(currentHosts => {
-      const updatedHosts = currentHosts.map(h => h.id === newHost.id ? hostWithData : h);
-      saveHosts(updatedHosts).catch(err => {
-          console.error("Failed to save hosts:", err)
-          toast({
-              title: "Fehler beim Speichern",
-              description: "Der neue Host konnte nicht persistent gespeichert werden.",
-              variant: "destructive"
-          })
-      });
-      return updatedHosts;
+        const updatedHosts = currentHosts.map(h => (h.id === newHost.id ? hostWithData : h));
+        saveHosts(updatedHosts).catch(err => {
+            console.error("Failed to save hosts:", err);
+            toast({
+                title: "Fehler beim Speichern",
+                description: "Der neue Host konnte nicht persistent gespeichert werden.",
+                variant: "destructive"
+            });
+        });
+        return updatedHosts;
     });
+}, [fetchHostData, toast]);
 
-  }, [fetchHostData, toast]);
+
+  const removeHost = (hostId: string) => {
+    const updatedHosts = hosts.filter(h => h.id !== hostId);
+    setHosts(updatedHosts);
+    saveHosts(updatedHosts).catch(err => console.error("Failed to save hosts:", err));
+    toast({
+        title: "Host entfernt",
+        description: `Host wird nicht mehr überwacht.`,
+    });
+  };
 
   const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
     if (!currentHosts || currentHosts.length === 0) return;
@@ -141,7 +151,7 @@ export default function RootLayout({
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
       // @ts-ignore
-      return React.cloneElement(child, { hosts, setHosts, addHost, loading, refreshAllHosts });
+      return React.cloneElement(child, { hosts, loading, addHost, removeHost, refreshAllHosts });
     }
     return child;
   });
@@ -168,3 +178,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    

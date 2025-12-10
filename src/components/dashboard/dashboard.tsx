@@ -1,6 +1,5 @@
 import type { Host } from "@/lib/types";
 import { HostCard } from "./host-card";
-import { AddHostDialog } from "./add-host-dialog";
 
 interface DashboardProps {
   hosts: Host[];
@@ -33,3 +32,5 @@ export function Dashboard({ hosts, onRemoveHost, onRemoveContainer }: DashboardP
     </div>
   );
 }
+
+    
