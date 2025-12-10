@@ -20,7 +20,7 @@ interface SentinelPageProps {
 
 export default function SentinelPage({ hosts, setHosts, addHost, loading, refreshAllHosts }: SentinelPageProps) {
   const { toast } = useToast();
-  const hostsRef = useRef<Host[]>([]);
+  const hostsRef = useRef<Host[]>();
 
   useEffect(() => {
     hostsRef.current = hosts;
@@ -28,7 +28,7 @@ export default function SentinelPage({ hosts, setHosts, addHost, loading, refres
   
   useEffect(() => {
     const interval = setInterval(() => {
-      if (hostsRef.current.length > 0) {
+      if (hostsRef.current && hostsRef.current.length > 0) {
         refreshAllHosts(hostsRef.current);
       }
     }, 5000); // Refresh every 5 seconds
