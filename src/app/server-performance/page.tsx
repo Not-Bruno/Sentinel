@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { getContainerLogo } from '@/components/logos';
 import { cn } from '@/lib/utils';
 import { formatUptime } from '@/lib/utils';
+import { useHosts } from '@/hooks/use-hosts';
 
 
 const StatCard = ({ title, value, icon: Icon, unit, description, isLoading }: { title: string, value: string | number, icon: React.ElementType, unit?: string, description: string, isLoading?: boolean }) => {
@@ -86,7 +87,8 @@ const ResourceChart = ({ data, dataKey, color, unit, title }: { data: any[], dat
     )
 }
 
-export default function ServerPerformancePage({ hosts, loading: hostsLoading }: { hosts: Host[], loading: boolean }) {
+export default function ServerPerformancePage() {
+  const { hosts, loading: hostsLoading } = useHosts();
   const [selectedHostId, setSelectedHostId] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
 

@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useHosts } from '@/hooks/use-hosts';
 
 type TimeRange = '1h' | '12h' | '24h' | 'all';
 type MetricType = 'cpuUsage' | 'memoryUsage';
@@ -71,7 +72,8 @@ const StatCard = ({ title, value, icon: Icon, unit, description, trend, isLoadin
 };
 
 
-export default function MonitoringPage({ hosts, loading: hostsLoading }: { hosts: Host[], loading: boolean }) {
+export default function MonitoringPage() {
+  const { hosts, loading: hostsLoading } = useHosts();
   const [selectedHostId, setSelectedHostId] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('1h');
   const [metricType, setMetricType] = useState<MetricType>('cpuUsage');

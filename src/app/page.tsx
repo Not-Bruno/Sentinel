@@ -4,16 +4,10 @@ import { useEffect, useRef } from "react";
 import type { Host } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dashboard } from "@/components/dashboard/dashboard";
+import { useHosts } from "@/hooks/use-hosts";
 
-interface HomePageProps {
-  hosts: Host[];
-  loading: boolean;
-  refreshAllHosts: (hosts: Host[]) => void;
-  removeHost: (hostId: string) => void;
-  addHost: (data: { name: string; ipAddress: string; sshPort: number }) => void;
-}
-
-export default function Home({ hosts, loading, refreshAllHosts, removeHost }: HomePageProps) {
+export default function Home() {
+  const { hosts, loading, refreshAllHosts, removeHost } = useHosts();
   const hostsRef = useRef<Host[]>();
 
   useEffect(() => {
