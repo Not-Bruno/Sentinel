@@ -6,18 +6,14 @@ interface DashboardProps {
   hosts: Host[];
   onRemoveHost: (hostId: string) => void;
   onRemoveContainer: (hostId: string, containerId: string) => void;
-  addHost: (data: { name: string; ipAddress: string; sshPort: number }) => void;
 }
 
-export function Dashboard({ hosts, onRemoveHost, onRemoveContainer, addHost }: DashboardProps) {
+export function Dashboard({ hosts, onRemoveHost, onRemoveContainer }: DashboardProps) {
   if (!hosts || hosts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full rounded-lg border-2 border-dashed bg-card py-12 text-center text-muted-foreground mt-8">
         <h2 className="text-2xl font-semibold">Keine Hosts werden überwacht.</h2>
-        <p className="mt-2">Klicke "Host hinzufügen", um einen neuen Server zu überwachen.</p>
-        <div className="mt-6">
-          <AddHostDialog onAddHost={addHost} />
-        </div>
+        <p className="mt-2">Klicke "Host hinzufügen" in der Navigation, um einen neuen Server zu überwachen.</p>
       </div>
     );
   }

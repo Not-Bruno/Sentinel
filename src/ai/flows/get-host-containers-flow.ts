@@ -68,7 +68,7 @@ const getHostDataFlow = ai.defineFlow(
       // memory: Gibt zurück: total_kb used_kb
       memory: `free | awk 'NR==2{printf "%d %d", $2, $3 }'`,
       // disk: Gibt zurück: total_gb used_gb percentage%
-      disk: `df -h / --output=size,used,pcent | awk 'NR==2{print $1, $2, $3}'`,
+      disk: `df -BG -h / --output=size,used,pcent | awk 'NR==2{print $1, $2, $3}'`,
     };
 
     const executeCommand = (command: string): Promise<string> => {
@@ -83,10 +83,10 @@ const getHostDataFlow = ai.defineFlow(
       });
     };
 
-    const parseDfOutput = (output: string): { diskUsedGb?: number; diskTotalGb?: number; diskUsage?: number } => {
+     const parseDfOutput = (output: string): { diskUsedGb?: number; diskTotalGb?: number; diskUsage?: number } => {
         if (!output) return {};
         // Example output: "458G 151G 34%"
-        const parts = output.replace(/G/g, ' ').replace(/M/g, ' / 1024').replace(/K/g, ' / 1024 / 1024').replace(/%/g, '').split(/\s+/);
+        const parts = output.replace(/G/g, '').replace(/M/g, '').replace(/K/g, '').replace(/%/g, '').split(/\s+/);
         if (parts.length < 3) return {};
         
         const totalGb = parseFloat(parts[0]);

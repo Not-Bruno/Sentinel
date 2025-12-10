@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 import type { Host } from "@/lib/types";
@@ -12,13 +12,12 @@ import { Dashboard } from "@/components/dashboard/dashboard";
 interface SentinelPageProps {
   hosts: Host[];
   setHosts: (hosts: Host[]) => void;
-  addHost: (data: { name: string; ipAddress: string; sshPort: number }) => void;
   loading: boolean;
   refreshAllHosts: (hosts: Host[]) => void;
 }
 
 
-export default function SentinelPage({ hosts, setHosts, addHost, loading, refreshAllHosts }: SentinelPageProps) {
+export default function SentinelPage({ hosts, setHosts, loading, refreshAllHosts }: SentinelPageProps) {
   const { toast } = useToast();
   const hostsRef = useRef<Host[]>();
 
@@ -36,7 +35,7 @@ export default function SentinelPage({ hosts, setHosts, addHost, loading, refres
   }, [refreshAllHosts]);
   
   
-  const removeHost = useCallback((hostId: string) => {
+  const removeHost = (hostId: string) => {
     setHosts(currentHosts => {
       const updatedHosts = currentHosts.filter(h => h.id !== hostId);
       saveHosts(updatedHosts).catch(err => console.error("Failed to save hosts:", err));
@@ -46,9 +45,9 @@ export default function SentinelPage({ hosts, setHosts, addHost, loading, refres
         title: "Host Removed",
         description: `Stopped monitoring host.`,
     });
-  }, [toast, setHosts]);
+  };
 
-  const removeContainer = useCallback((hostId: string, containerId: string) => {
+  const removeContainer = (hostId: string, containerId: string) => {
     // This action is temporary and visual only, it doesn't persist.
     // The container will reappear on the next refresh cycle.
     setHosts(currentHosts => currentHosts.map(h => {
@@ -60,7 +59,7 @@ export default function SentinelPage({ hosts, setHosts, addHost, loading, refres
       }
       return h;
     }));
-  }, [setHosts]);
+  };
 
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
@@ -74,7 +73,7 @@ export default function SentinelPage({ hosts, setHosts, addHost, loading, refres
 
   return (
     <>
-      {loading && (!hosts || hosts.length === 0) ? <LoadingSkeleton /> : <Dashboard hosts={hosts} onRemoveHost={removeHost} onRemoveContainer={removeContainer} addHost={addHost} />}
+      {loading && (!hosts || hosts.length === 0) ? <LoadingSkeleton /> : <Dashboard hosts={hosts} onRemoveHost={removeHost} onRemoveContainer={removeContainer} />}
     </>
   );
 }

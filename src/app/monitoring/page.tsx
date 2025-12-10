@@ -111,7 +111,7 @@ export default function MonitoringPage() {
     if (selectedHost) {
       const initialVisible = new Set<string>(['host']);
       // Automatically show the first container if it exists
-      if (selectedHost.containers.length > 0) {
+      if (selectedHost.containers && selectedHost.containers.length > 0) {
         initialVisible.add(selectedHost.containers[0].id);
       }
       setVisibleEntities(initialVisible);
@@ -132,7 +132,7 @@ export default function MonitoringPage() {
   const allEntities = useMemo<ChartEntity[]>(() => {
     if (!selectedHost) return [];
     const hostEntity: ChartEntity = { id: 'host', name: selectedHost.name, type: 'host' };
-    const containerEntities: ChartEntity[] = selectedHost.containers.map(c => ({ id: c.id, name: c.name, type: 'container' }));
+    const containerEntities: ChartEntity[] = (selectedHost.containers || []).map(c => ({ id: c.id, name: c.name, type: 'container' }));
     return [hostEntity, ...containerEntities];
   }, [selectedHost]);
   
@@ -186,7 +186,7 @@ export default function MonitoringPage() {
   }
 
   const runningContainers = useMemo(() => {
-    return selectedHost?.containers.filter(c => c.status === 'running').length ?? 0;
+    return selectedHost?.containers?.filter(c => c.status === 'running').length ?? 0;
   }, [selectedHost]);
 
   const averageUtilization = useMemo(() => {
@@ -229,7 +229,7 @@ export default function MonitoringPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard isLoading={loading} title="Laufende Container" value={runningContainers.toString()} icon={Activity} description={`${selectedHost?.containers.length ?? 0} Container insgesamt`} />
+        <StatCard isLoading={loading} title="Laufende Container" value={runningContainers.toString()} icon={Activity} description={`${selectedHost?.containers?.length ?? 0} Container insgesamt`} />
         <StatCard isLoading={loading} title="Ressourceneffizienz" value={averageUtilization.toFixed(1)} unit='%' icon={Cpu} description="Durchschnittliche Auslastung" />
         <StatCard isLoading={loading} title="Performance-Anomalien" value="0" icon={AlertTriangle} description="Erkannte Abweichungen" />
         <StatCard isLoading={loading} title="Host-Gesundheit" value={selectedHost?.status === 'online' ? '100' : '0'} unit='%' icon={CircleCheck} description={selectedHost?.status === 'online' ? "Host ist erreichbar" : "Host ist offline"} />
@@ -302,6 +302,7 @@ export default function MonitoringPage() {
                              return (
                                <Label
                                  key={entity.id}
+                                 htmlFor={`check-${entity.id}`}
                                  className={cn("flex items-center gap-3 p-2 rounded-md border bg-background/50 hover:bg-accent transition-colors cursor-pointer", {
                                      "bg-accent/50": visibleEntities.has(entity.id)
                                  })}
@@ -373,7 +374,7 @@ export default function MonitoringPage() {
                             <TableCell className="text-right font-mono">{getCurrentValue('memoryUsage', container.id).toFixed(1)}%</TableCell>
                         </TableRow>
                     )})}
-                    {!loading && selectedHost?.containers.length === 0 && (
+                    {!loading && selectedHost?.containers?.length === 0 && (
                         <TableRow>
                             <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
                                 Keine Container auf diesem Host gefunden.

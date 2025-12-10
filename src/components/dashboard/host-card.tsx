@@ -127,10 +127,12 @@ export function HostCard({ host, onRemoveHost, onRemoveContainer }: HostCardProp
             </div>
           </div>
           {host.ipAddress !== '0.0.0.1' && (
-            <Button size="icon" variant="ghost" className="absolute top-2 right-2 h-8 w-8 rounded-full" onClick={() => onRemoveHost(host.id)}>
-              <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive"/>
-              <span className="sr-only">Remove host</span>
-            </Button>
+            <div className="absolute top-2 right-2">
+                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => onRemoveHost(host.id)}>
+                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive"/>
+                    <span className="sr-only">Remove host</span>
+                </Button>
+            </div>
           )}
         </CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
@@ -156,7 +158,7 @@ export function HostCard({ host, onRemoveHost, onRemoveContainer }: HostCardProp
             </div>
           )}
 
-          {host.containers.length > 0 ? (
+          {host.containers && host.containers.length > 0 ? (
             <div className="flex-1 flex flex-col min-h-0 mt-2">
               <p className="px-2 text-xs font-semibold text-muted-foreground mb-1">CONTAINER ({host.containers.length})</p>
               <ScrollArea className="flex-1 -mx-2">
