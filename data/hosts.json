@@ -7,8 +7,8 @@
     "status": "online",
     "createdAt": 1672531200000,
     "containers": [],
-    "cpuUsage": 97967,
-    "memoryUsage": 33,
+    "cpuUsage": 71.4,
+    "memoryUsage": 34,
     "history": [
       {
         "timestamp": 1765281870404,
@@ -1009,9 +1009,179 @@
         "timestamp": 1765350885269,
         "cpuUsage": 97967,
         "memoryUsage": 33
+      },
+      {
+        "timestamp": 1765350891571,
+        "cpuUsage": 70,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350896337,
+        "cpuUsage": 71.4,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350901320,
+        "cpuUsage": 75,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350906272,
+        "cpuUsage": 70,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350911254,
+        "cpuUsage": 60,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350916276,
+        "cpuUsage": 63.6,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350921294,
+        "cpuUsage": 76.2,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350926248,
+        "cpuUsage": 60,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350931367,
+        "cpuUsage": 76.2,
+        "memoryUsage": 33
+      },
+      {
+        "timestamp": 1765350936309,
+        "cpuUsage": 66.7,
+        "memoryUsage": 33
+      },
+      {
+        "timestamp": 1765350941254,
+        "cpuUsage": 60,
+        "memoryUsage": 33
+      },
+      {
+        "timestamp": 1765350946283,
+        "cpuUsage": 73.7,
+        "memoryUsage": 33
+      },
+      {
+        "timestamp": 1765350951299,
+        "cpuUsage": 72.7,
+        "memoryUsage": 33
+      },
+      {
+        "timestamp": 1765350956244,
+        "cpuUsage": 63.6,
+        "memoryUsage": 33
+      },
+      {
+        "timestamp": 1765350961634,
+        "cpuUsage": 80.8,
+        "memoryUsage": 51
+      },
+      {
+        "timestamp": 1765350966274,
+        "cpuUsage": 71.4,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350971256,
+        "cpuUsage": 60,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350976243,
+        "cpuUsage": 61.9,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350981254,
+        "cpuUsage": 68.2,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350986282,
+        "cpuUsage": 75,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350991284,
+        "cpuUsage": 75,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765350996273,
+        "cpuUsage": 66.7,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351001267,
+        "cpuUsage": 61.9,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351006242,
+        "cpuUsage": 65,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351011317,
+        "cpuUsage": 81,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351016288,
+        "cpuUsage": 63.6,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351021259,
+        "cpuUsage": 65,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351026315,
+        "cpuUsage": 73.9,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351031293,
+        "cpuUsage": 72.7,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351036270,
+        "cpuUsage": 80,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351041270,
+        "cpuUsage": 72.7,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351046303,
+        "cpuUsage": 71.4,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351051325,
+        "cpuUsage": 90.5,
+        "memoryUsage": 34
+      },
+      {
+        "timestamp": 1765351056256,
+        "cpuUsage": 71.4,
+        "memoryUsage": 34
       }
     ],
-    "memoryUsedGb": 2.5,
+    "memoryUsedGb": 2.6,
     "memoryTotalGb": 7.8,
     "diskUsedGb": 12,
     "diskTotalGb": 3.9

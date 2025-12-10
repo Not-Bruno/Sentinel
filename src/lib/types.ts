@@ -17,6 +17,8 @@ export interface Container {
   status: ContainerStatus; // Der aktuelle Zustand des Containers.
   uptime: string;      // Die Laufzeit des Containers als Text (z.B. "Up 5 hours").
   createdAt: number;   // Der Zeitstempel, wann der Container erstellt wurde (in Millisekunden).
+  cpuUsage?: number;   // CPU-Auslastung in Prozent.
+  memoryUsage?: number; // RAM-Auslastung in Prozent.
 }
 
 /**

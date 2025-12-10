@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Container, ContainerStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, HelpCircle, PowerOff, Trash2, XCircle } from "lucide-react";
+import { CheckCircle2, HelpCircle, PowerOff, Trash2, XCircle, Cpu, MemoryStick } from "lucide-react";
 import { getContainerLogo } from "@/components/logos";
 import { Button } from "../ui/button";
 import {
@@ -21,6 +21,17 @@ const statusConfig: Record<ContainerStatus, { icon: React.ElementType, color: st
   stopped: { icon: PowerOff, color: 'text-muted-foreground', label: 'Stopped' },
   error: { icon: XCircle, color: 'text-destructive', label: 'Error' },
 };
+
+const ResourceDisplay = ({ icon: Icon, value }: { icon: React.ElementType, value?: number }) => {
+  if (value === undefined || value === null) return null;
+  return (
+    <div className="flex items-center gap-1">
+      <Icon className="w-3 h-3 text-muted-foreground" />
+      <span className="font-mono">{value.toFixed(1)}%</span>
+    </div>
+  );
+};
+
 
 export function ContainerCard({ container, onRemove }: ContainerCardProps) {
   const { icon: Icon, color, label } = statusConfig[container.status] || { icon: HelpCircle, color: 'text-muted-foreground', label: 'Unknown' };
@@ -47,9 +58,15 @@ export function ContainerCard({ container, onRemove }: ContainerCardProps) {
             </TooltipContent>
           </Tooltip>
         </CardHeader>
-        <CardContent className="p-3 pt-0 text-xs text-muted-foreground">
+        <CardContent className="p-3 pt-0 text-xs text-muted-foreground space-y-1">
           <p className="truncate">Status: {container.uptime}</p>
           <p className="truncate">Image: {container.image}</p>
+          {container.status === 'running' && (
+            <div className="flex items-center gap-3 pt-1">
+              <ResourceDisplay icon={Cpu} value={container.cpuUsage} />
+              <ResourceDisplay icon={MemoryStick} value={container.memoryUsage} />
+            </div>
+          )}
         </CardContent>
          <Button size="icon" variant="ghost" className="absolute top-0.5 right-0.5 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onRemove(container.id)}>
               <Trash2 className="h-4 w-4 text-destructive"/>

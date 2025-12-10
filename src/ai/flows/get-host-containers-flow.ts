@@ -48,6 +48,8 @@ const getHostDataFlow = ai.defineFlow(
     // Befehle zum Abrufen der Systemmetriken und Container-Infos
     const commands = {
       containers: "docker ps -a --format '{{json .}}'",
+      // Gibt CPU- und RAM-Auslastung für jeden Container als JSON aus
+      containerStats: "docker stats --no-stream --format '{{json .}}'",
       // Liest die CPU-Auslastung aus `top`, extrahiert den "idle"-Wert und zieht ihn von 100 ab.
       cpu: "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}'",
       // memory: Gibt zurück: total_kb used_kb
@@ -107,20 +109,33 @@ const getHostDataFlow = ai.defineFlow(
     }
 
     const executeAndParse = async (executor: (cmd: string) => Promise<string>) => {
-        const [containerOutput, cpuOutput, memoryOutput, diskOutput] = await Promise.all([
+        const [containerOutput, statsOutput, cpuOutput, memoryOutput, diskOutput] = await Promise.all([
             executor(commands.containers),
+            executor(commands.containerStats),
             executor(commands.cpu),
             executor(commands.memory),
             executor(commands.disk),
         ]);
 
-        const containers = containerOutput ? parseDockerPsJson(containerOutput) : [];
+        const containers = parseDockerPsJson(containerOutput);
+        const stats = parseDockerStatsJson(statsOutput);
+
+        // Füge die Stats zu den Containern hinzu
+        const containersWithStats = containers.map(container => {
+            const containerStats = stats[container.id];
+            return {
+                ...container,
+                cpuUsage: containerStats?.cpuUsage,
+                memoryUsage: containerStats?.memoryUsage,
+            };
+        });
+
         const cpuUsage = cpuOutput ? parseFloat(cpuOutput) : undefined;
         const memoryData = parseFreeOutput(memoryOutput);
         const diskData = parseDfOutput(diskOutput);
 
         return {
-            containers,
+            containers: containersWithStats,
             cpuUsage,
             ...memoryData,
             ...diskData,
@@ -216,4 +231,32 @@ function parseDockerPsJson(stdout: string): Container[] {
     }).filter((c): c is Container => c !== null);
 
     return containers;
+}
+
+
+/**
+ * Wandelt den JSON-Output des `docker stats`-Befehls in ein Objekt um.
+ * @param stdout Die rohe Ausgabe des Befehls.
+ * @returns Ein Objekt mit Container-IDs als Schlüssel und deren Stats als Wert.
+ */
+function parseDockerStatsJson(stdout: string): Record<string, { cpuUsage: number; memoryUsage: number }> {
+    const stats: Record<string, { cpuUsage: number; memoryUsage: number }> = {};
+    if (!stdout) return stats;
+
+    const lines = stdout.trim().split('\n');
+    for (const line of lines) {
+        try {
+            const data = JSON.parse(line);
+            // Docker gibt für CPU- und RAM-Nutzung Werte wie "0.00%" oder "1.23%" zurück.
+            // Wir entfernen das Prozentzeichen und wandeln es in eine Zahl um.
+            const cpuUsage = parseFloat(data.CPUPerc?.replace('%', '')) || 0;
+            const memoryUsage = parseFloat(data.MemPerc?.replace('%', '')) || 0;
+            
+            // Verwende die volle Container-ID als Schlüssel
+            stats[data.ID] = { cpuUsage, memoryUsage };
+        } catch (e) {
+            console.error(`Konnte die Docker-Stats-JSON-Zeile nicht parsen: ${line}`, e);
+        }
+    }
+    return stats;
 }
