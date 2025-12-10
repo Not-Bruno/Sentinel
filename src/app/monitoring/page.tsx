@@ -21,6 +21,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Activity, CircleCheck, HardDrive, AlertTriangle, Cpu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 type TimeRange = '1h' | '12h' | '24h' | 'all';
 type MetricType = 'cpuUsage' | 'memoryUsage';
