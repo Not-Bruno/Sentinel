@@ -7,8 +7,8 @@
     "status": "online",
     "createdAt": 1672531200000,
     "containers": [],
-    "cpuUsage": 66.7,
-    "memoryUsage": 58,
+    "cpuUsage": 100,
+    "memoryUsage": 73,
     "history": [
       {
         "timestamp": 1765281870404,
@@ -2608,9 +2608,75 @@
         "cpuUsage": 66.7,
         "memoryUsage": 58,
         "containers": {}
+      },
+      {
+        "timestamp": 1765353798326,
+        "cpuUsage": 96.6,
+        "memoryUsage": 69,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353807143,
+        "cpuUsage": 95.5,
+        "memoryUsage": 72,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353809469,
+        "cpuUsage": 95.7,
+        "memoryUsage": 73,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353814646,
+        "cpuUsage": 91.7,
+        "memoryUsage": 73,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353819444,
+        "cpuUsage": 95.5,
+        "memoryUsage": 74,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353824411,
+        "cpuUsage": 95.7,
+        "memoryUsage": 73,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353829278,
+        "cpuUsage": 95.7,
+        "memoryUsage": 74,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353834975,
+        "cpuUsage": 95.2,
+        "memoryUsage": 73,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353839243,
+        "cpuUsage": 71.4,
+        "memoryUsage": 71,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353844396,
+        "cpuUsage": 95.5,
+        "memoryUsage": 73,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765353849005,
+        "cpuUsage": 100,
+        "memoryUsage": 73,
+        "containers": {}
       }
     ],
-    "memoryUsedGb": 4.5,
+    "memoryUsedGb": 5.7,
     "memoryTotalGb": 7.8,
     "diskUsedGb": 12,
     "diskTotalGb": 3.9
