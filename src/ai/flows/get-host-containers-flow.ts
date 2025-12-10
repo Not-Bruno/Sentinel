@@ -48,9 +48,8 @@ const getHostDataFlow = ai.defineFlow(
     // Befehle zum Abrufen der Systemmetriken und Container-Infos
     const commands = {
       containers: "docker ps -a --format '{{json .}}'",
-      // Liest /proc/stat, wartet 1 Sekunde, liest es erneut und berechnet die CPU-Auslastung.
-      // Das ist robuster als `top`, da das Format von /proc/stat standardisiert ist.
-      cpu: `awk -v 'ORS= ' '/^cpu / {for(i=2;i<=NF;i++)s1[i-1]=$i} END{print s1[1],s1[2],s1[3],s1[4]}' /proc/stat && sleep 1 && awk -v 'ORS= ' '/^cpu / {for(i=2;i<=NF;i++)s2[i-1]=$i} END{print s2[1],s2[2],s2[3],s2[4]}' /proc/stat | awk '{prev_total=$1+$2+$3+$4; prev_idle=$4; total=$5+$6+$7+$8; idle=$8; total_diff=total-prev_total; idle_diff=idle-prev_idle; print 100*(total_diff-idle_diff)/total_diff}'`,
+      // Liest die CPU-Auslastung aus `top`, extrahiert den "idle"-Wert und zieht ihn von 100 ab.
+      cpu: "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}'",
       // memory: Gibt zurück: total_kb used_kb
       memory: `free | awk 'NR==2{printf "%d %d", $2, $3 }'`,
       // disk: Gibt zurück: total_gb used_gb percentage%
