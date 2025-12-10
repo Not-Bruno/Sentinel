@@ -6,6 +6,10 @@ import { Header } from '@/components/layout/header';
 import { HostProvider } from '@/hooks/use-hosts';
 import { MainNav } from '@/components/layout/main-nav';
 
+// Importiert die zentrale Registry auf der obersten Ebene, um sicherzustellen,
+// dass alle Server-Aktionen vom Next.js-Build-Prozess erfasst werden.
+import '@/ai/genkit-registry';
+
 export default function RootLayout({
   children,
 }: Readonly<{
