@@ -85,8 +85,9 @@ const getHostDataFlow = ai.defineFlow(
 
      const parseDfOutput = (output: string | null): { diskUsedGb?: number; diskTotalGb?: number; diskUsage?: number } => {
         if (!output) return {};
-        // Example output: "458G 151G 34%"
-        const parts = output.replace(/G/g, '').replace(/M/g, '').replace(/K/g, '').replace(/%/g, '').split(/\s+/);
+        const cleanedOutput = output.replace(/G/g, '').replace(/M/g, '').replace(/K/g, '').replace(/%/g, '');
+        const parts = cleanedOutput.split(/\s+/);
+        
         if (parts.length < 3) return {};
         
         const totalGb = parseFloat(parts[0]);
@@ -179,7 +180,7 @@ const getHostDataFlow = ai.defineFlow(
         privateKey: process.env.SSH_PRIVATE_KEY.replace(/\\n/g, '\n'),
       });
       
-      const sshExecutor = async (command: string) => {
+      const sshExecutor = async (command: string): Promise<string | null> => {
         const result = await ssh.execCommand(command);
         if (result.code !== 0) {
             console.error(`Fehler bei SSH-Ausführung von "${command}":`, result.stderr);

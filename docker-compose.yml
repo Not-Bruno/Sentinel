@@ -21,7 +21,7 @@ services:
       # --- SSH-Konfiguration für Remote-Hosts ---
       # Entferne das Kommentarzeichen und füge hier deinen formatierten SSH-Schlüssel ein.
       # Der Schlüssel muss als einzeiliger String formatiert sein (Zeilenumbrüche mit \n ersetzen).
-      # Beispiel: - SSH_PRIVATE_KEY=-----BEGIN OPENSSH PRIVATE KEY-----\nabcde...\n-----END OPENSSH PRIVATE KEY-----
+      # Beispiel: # - SSH_PRIVATE_KEY=-----BEGIN OPENSSH PRIVATE KEY-----\nabcde...\n-----END OPENSSH PRIVATE KEY-----
       # - SSH_PRIVATE_KEY=
     restart: unless-stopped
     depends_on:
