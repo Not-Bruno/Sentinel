@@ -15,5 +15,3 @@ export default function Home({ hosts, addHost, loading, refreshAllHosts }: HomeP
     </div>
   );
 }
-
-    
