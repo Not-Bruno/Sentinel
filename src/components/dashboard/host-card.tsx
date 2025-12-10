@@ -5,6 +5,7 @@ import { CheckCircle2, ServerCrash, Trash2, XCircle, Cpu, MemoryStick, HardDrive
 import { ContainerCard } from "./container-card";
 import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface HostCardProps {
   host: Host;
@@ -61,7 +62,7 @@ export function HostCard({ host, onRemoveHost, onRemoveContainer }: HostCardProp
   const { icon: Icon, color, label } = statusConfig[host.status];
   
   return (
-    <Card className={cn("flex flex-col rounded-lg border-2 bg-card transition-shadow hover:shadow-xl", {
+    <Card className={cn("flex flex-col rounded-lg border-2 bg-card transition-shadow hover:shadow-xl max-h-[calc(100vh-12rem)] md:max-h-[calc(100vh-14rem)]", {
       'border-destructive/40 bg-destructive/5': host.status === 'offline',
       'border-transparent': host.status !== 'offline',
     })}>
@@ -81,7 +82,7 @@ export function HostCard({ host, onRemoveHost, onRemoveContainer }: HostCardProp
           </Button>
         )}
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-4">
+      <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
         {host.status === 'online' && (
           <div className="space-y-3 px-2">
             <ResourceBar icon={Cpu} label="CPU" value={host.cpuUsage} color="bg-cyan-500" />
@@ -105,17 +106,19 @@ export function HostCard({ host, onRemoveHost, onRemoveContainer }: HostCardProp
         )}
 
         {host.containers.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {host.containers.map((container) => (
-              <ContainerCard 
-                key={container.id} 
-                container={container} 
-                onRemove={(containerId) => onRemoveContainer(host.id, containerId)}
-              />
-            ))}
-          </div>
+          <ScrollArea className="flex-1 -mx-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 py-1">
+                {host.containers.map((container) => (
+                  <ContainerCard 
+                    key={container.id} 
+                    container={container} 
+                    onRemove={(containerId) => onRemoveContainer(host.id, containerId)}
+                  />
+                ))}
+              </div>
+          </ScrollArea>
         ) : (
-          <div className="text-center flex flex-col items-center justify-center rounded-md border-2 border-dashed text-muted-foreground p-8 h-full">
+          <div className="flex-1 text-center flex flex-col items-center justify-center rounded-md border-2 border-dashed text-muted-foreground p-8 h-full mt-4">
             <ServerCrash className="w-10 h-10 mb-2"/>
             <p className="font-medium">Keine Container</p>
             <p className="text-xs">Auf diesem Host laufen keine Container.</p>

@@ -7,7 +7,7 @@
     "status": "online",
     "createdAt": 1672531200000,
     "containers": [],
-    "cpuUsage": 91.3,
+    "cpuUsage": 66.7,
     "memoryUsage": 39,
     "history": [
       {
@@ -1384,6 +1384,48 @@
         "timestamp": 1765351315847,
         "cpuUsage": 91.3,
         "memoryUsage": 39
+      },
+      {
+        "timestamp": 1765351318067,
+        "cpuUsage": 69.6,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351322876,
+        "cpuUsage": 66.7,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351327790,
+        "cpuUsage": 71.4,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351332813,
+        "cpuUsage": 72.7,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351337833,
+        "cpuUsage": 65,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351342829,
+        "cpuUsage": 71.4,
+        "memoryUsage": 39,
+        "containers": {}
+      },
+      {
+        "timestamp": 1765351347815,
+        "cpuUsage": 66.7,
+        "memoryUsage": 39,
+        "containers": {}
       }
     ],
     "memoryUsedGb": 3,
