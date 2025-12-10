@@ -25,12 +25,6 @@ export function Header({ onAddHost }: HeaderProps) {
             <span className="sr-only">Monitoring</span>
           </Link>
         </Button>
-         <Button variant="outline" size="icon" asChild>
-          <Link href="/security">
-            <ShieldCheck className="h-4 w-4" />
-            <span className="sr-only">Security</span>
-          </Link>
-        </Button>
         <AddHostDialog onAddHost={onAddHost} />
         <ThemeToggle />
       </div>
