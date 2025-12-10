@@ -190,6 +190,7 @@ export default function MonitoringPage() {
   }, [selectedHost]);
 
   const averageUtilization = useMemo(() => {
+    if(!filteredHistory || filteredHistory.length === 0) return 0;
     const hostCpu = getAverage('cpuUsage', 'host');
     const hostMem = getAverage('memoryUsage', 'host');
     if (isNaN(hostCpu) || isNaN(hostMem)) return 0;
@@ -331,6 +332,7 @@ export default function MonitoringPage() {
                     <TableHeader>
                     <TableRow>
                         <TableHead>Container</TableHead>
+                        <TableHead>Image</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className='text-right'>CPU (Aktuell)</TableHead>
                         <TableHead className='text-right'>RAM (Aktuell)</TableHead>
@@ -340,6 +342,7 @@ export default function MonitoringPage() {
                     {loading && [...Array(3)].map((_, i) => (
                         <TableRow key={i}>
                             <TableCell><Skeleton className='h-5 w-32'/></TableCell>
+                            <TableCell><Skeleton className='h-5 w-40'/></TableCell>
                             <TableCell><Skeleton className='h-5 w-24'/></TableCell>
                             <TableCell className='text-right'><Skeleton className='h-5 w-16 ml-auto'/></TableCell>
                             <TableCell className='text-right'><Skeleton className='h-5 w-16 ml-auto'/></TableCell>
@@ -352,6 +355,9 @@ export default function MonitoringPage() {
                             <TableCell className="font-medium flex items-center gap-3">
                                 <Logo className="w-5 h-5 text-muted-foreground" />
                                 {container.name}
+                            </TableCell>
+                            <TableCell className='text-muted-foreground truncate max-w-xs'>
+                                {container.image}
                             </TableCell>
                             <TableCell>
                                 <div className='flex items-center gap-2'>
@@ -369,7 +375,7 @@ export default function MonitoringPage() {
                     )})}
                     {!loading && selectedHost?.containers.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
+                            <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
                                 Keine Container auf diesem Host gefunden.
                             </TableCell>
                         </TableRow>

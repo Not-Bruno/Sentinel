@@ -60,7 +60,7 @@ export function ContainerCard({ container, onRemove }: ContainerCardProps) {
         </CardHeader>
         <CardContent className="p-3 pt-0 text-xs text-muted-foreground space-y-1">
           <p className="truncate">Status: {container.uptime}</p>
-          <p className="truncate">Image: {container.image}</p>
+          
           {container.status === 'running' && (
             <div className="flex items-center gap-3 pt-1">
               <ResourceDisplay icon={Cpu} value={container.cpuUsage} />

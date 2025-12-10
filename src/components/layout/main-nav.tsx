@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { LayoutDashboard, Server, Box } from 'lucide-react';
 
 const links = [
-    { href: '/', label: 'Infrastruktur-Übersicht', icon: LayoutDashboard },
+    { href: '/', label: 'Monitoring Übersicht', icon: LayoutDashboard },
     { href: '/server-performance', label: 'Server-Performance', icon: Server },
     { href: '/monitoring', label: 'Container-Analytik', icon: Box },
 ];
