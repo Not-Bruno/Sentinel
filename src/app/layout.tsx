@@ -88,22 +88,33 @@ export default function RootLayout({
       history: [],
     };
 
-    // Add host to UI immediately for responsiveness
-    const updatedHosts = [newHost, ...hosts];
-    setHosts(updatedHosts);
+    // 1. Add host to UI immediately for responsiveness
+    setHosts(prevHosts => [newHost, ...prevHosts]);
 
     try {
+        // 2. Fetch initial data for the new host
         const hostWithData = await fetchHostData(newHost);
         
-        // Final update with fetched data
-        const finalHosts = hosts.map(h => (h.id === newHost.id ? hostWithData : h));
-        setHosts(finalHosts);
-        
-        await saveHosts(finalHosts);
+        // 3. Update the host in the list with the fetched data and save everything
+        setHosts(prevHosts => {
+            const updatedHosts = prevHosts.map(h => h.id === newHost.id ? hostWithData : h);
+            
+            // 4. Persist the final, updated list
+            saveHosts(updatedHosts).then(() => {
+                 toast({
+                    title: "Host hinzugefügt",
+                    description: `Der Host "${newHost.name}" wird jetzt überwacht.`,
+                });
+            }).catch(err => {
+                console.error("Failed to save hosts after adding:", err);
+                toast({
+                    title: "Fehler beim Speichern",
+                    description: "Der neue Host konnte nicht persistent gespeichert werden.",
+                    variant: "destructive"
+                });
+            });
 
-        toast({
-            title: "Host hinzugefügt",
-            description: `Der Host "${newHost.name}" wird jetzt überwacht.`,
+            return updatedHosts;
         });
 
     } catch (error) {
@@ -113,11 +124,10 @@ export default function RootLayout({
             description: `Der Host "${newHost.name}" konnte nicht hinzugefügt werden.`,
             variant: "destructive"
          });
-         // Rollback: Remove the host from UI if fetching data fails
-         const rolledBackHosts = hosts.filter(h => h.id !== newHost.id);
-         setHosts(rolledBackHosts);
+         // Rollback: Remove the host from UI if the initial fetch fails
+         setHosts(prevHosts => prevHosts.filter(h => h.id !== newHost.id));
     }
-}, [hosts, fetchHostData, toast]);
+}, [fetchHostData, toast]);
 
 
   const removeHost = (hostId: string) => {
@@ -155,13 +165,11 @@ export default function RootLayout({
       setLoading(true);
       try {
         const initialHosts = await getSavedHosts();
-        if (initialHosts.length > 0) {
+        if (initialHosts && initialHosts.length > 0) {
           const refreshedHosts = await Promise.all(initialHosts.map(host => fetchHostData(host)));
           setHosts(refreshedHosts);
-          // Save the refreshed data back
           await saveHosts(refreshedHosts);
         } else {
-          // If no hosts are saved, the state is already an empty array
           setHosts([]);
         }
       } catch (error) {
