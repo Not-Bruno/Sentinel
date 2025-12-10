@@ -6,8 +6,49 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getConnection } from '@/lib/db';
-import type { Host, DatabaseStatus } from '@/lib/types';
+import type { Host, DatabaseStatus, Container, HostMetric } from '@/lib/types';
 import { RowDataPacket } from 'mysql2';
+
+// Zod schemas for validation
+const ContainerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  image: z.string(),
+  status: z.enum(['running', 'stopped', 'error']),
+  uptime: z.string(),
+  createdAt: z.number(),
+  cpuUsage: z.number().optional(),
+  memoryUsage: z.number().optional(),
+});
+
+const HostMetricSchema = z.object({
+  timestamp: z.number(),
+  cpuUsage: z.number(),
+  memoryUsage: z.number(),
+  containers: z.record(z.string(), z.object({
+    cpuUsage: z.number(),
+    memoryUsage: z.number(),
+  })),
+});
+
+const HostSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  ipAddress: z.string(),
+  sshPort: z.number().optional(),
+  status: z.enum(['online', 'offline']),
+  createdAt: z.number(),
+  containers: z.array(ContainerSchema),
+  cpuUsage: z.number().optional(),
+  memoryUsage: z.number().optional(),
+  memoryUsedGb: z.number().optional(),
+  memoryTotalGb: z.number().optional(),
+  diskUsage: z.number().optional(),
+  diskUsedGb: z.number().optional(),
+  diskTotalGb: z.number().optional(),
+  history: z.array(HostMetricSchema),
+});
+
 
 function parseDbHost(dbHost: any): Host {
     return {
@@ -61,7 +102,7 @@ const getSavedHostsFlow = ai.defineFlow(
       return rows.map(parseDbHost);
     } catch (error) {
       console.error('Error fetching hosts from DB:', error);
-      throw new Error('Could not read host data.');
+      throw new Error('Host-Daten konnten nicht gelesen werden.');
     } finally {
         conn.release();
     }
@@ -71,7 +112,7 @@ const getSavedHostsFlow = ai.defineFlow(
 const saveHostFlow = ai.defineFlow(
   {
     name: 'saveHostFlow',
-    inputSchema: z.any(),
+    inputSchema: HostSchema,
   },
   async (host: Host): Promise<void> => {
     const conn = await getConnection();
@@ -100,7 +141,7 @@ const saveHostFlow = ai.defineFlow(
       await conn.query(query, values);
     } catch (error) {
       console.error('Error saving host to DB:', error);
-      throw new Error('Could not save host data.');
+      throw new Error('Host-Daten konnten nicht gespeichert werden.');
     } finally {
         conn.release();
     }
@@ -109,7 +150,7 @@ const saveHostFlow = ai.defineFlow(
 
 const updateHostFlow = ai.defineFlow({
     name: 'updateHostFlow',
-    inputSchema: z.any(),
+    inputSchema: HostSchema,
 }, async(host: Host): Promise<void> => {
     const conn = await getConnection();
     try {
@@ -123,9 +164,8 @@ const updateHostFlow = ai.defineFlow({
             host.ipAddress,
             host.sshPort ?? 22,
             host.status,
-            // Ensure we are not double-stringifying
-            typeof host.containers === 'string' ? host.containers : JSON.stringify(host.containers || []),
-            typeof host.history === 'string' ? host.history : JSON.stringify(host.history || []),
+            JSON.stringify(host.containers || []),
+            JSON.stringify(host.history || []),
             host.cpuUsage,
             host.memoryUsage,
             host.memoryUsedGb,
@@ -138,7 +178,7 @@ const updateHostFlow = ai.defineFlow({
         await conn.query(query, values);
     } catch (error) {
         console.error('Error updating host in DB:', error);
-        throw new Error('Could not update host data.');
+        throw new Error('Host-Daten konnten nicht aktualisiert werden.');
     } finally {
         conn.release();
     }
@@ -153,7 +193,7 @@ const deleteHostFlow = ai.defineFlow({
         await conn.query('DELETE FROM hosts WHERE id = ?', [hostId]);
     } catch (error) {
         console.error('Error deleting host from DB:', error);
-        throw new Error('Could not delete host data.');
+        throw new Error('Host-Daten konnten nicht gelöscht werden.');
     } finally {
         conn.release();
     }

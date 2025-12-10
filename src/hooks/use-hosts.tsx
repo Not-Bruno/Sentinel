@@ -12,7 +12,7 @@ interface HostContextType {
   hosts: Host[];
   loading: boolean;
   dbStatus: DatabaseStatus;
-  addHost: (data: { name: string; ipAddress: string; sshPort: number }) => Promise<void>;
+  addHost: (newHost: Host) => Promise<void>;
   removeHost: (hostId: string) => Promise<void>;
   refreshAllHosts: (currentHosts: Host[]) => Promise<void>;
 }
@@ -92,16 +92,7 @@ export function HostProvider({ children }: { children: ReactNode }) {
     }
   }, [toast]);
 
-  const addHost = useCallback(async (data: { name: string; ipAddress: string; sshPort: number }) => {
-    const newHost: Host = {
-      id: `host-${Date.now()}`,
-      ...data,
-      status: 'online', // Assume online initially
-      createdAt: Date.now(),
-      containers: [],
-      history: [],
-    };
-
+  const addHost = useCallback(async (newHost: Host) => {
     try {
       await saveHost(newHost);
       setHosts(prevHosts => [newHost, ...prevHosts]);
@@ -119,7 +110,7 @@ export function HostProvider({ children }: { children: ReactNode }) {
          console.error("Error adding host:", error);
          toast({
             title: "Fehler beim Hinzufügen",
-            description: `Der Host "${newHost.name}" konnte nicht hinzugefügt werden.`,
+            description: (error as Error).message || `Der Host "${newHost.name}" konnte nicht hinzugefügt werden.`,
             variant: "destructive"
          });
     }
@@ -167,7 +158,7 @@ export function HostProvider({ children }: { children: ReactNode }) {
         console.error("Failed to load initial host data:", error);
         toast({
           title: "Fehler beim Laden der Hosts",
-          description: "Die gespeicherte Host-Liste konnte nicht geladen werden.",
+          description: (error as Error).message || "Die gespeicherte Host-Liste konnte nicht geladen werden.",
           variant: "destructive",
         });
         setHosts([]);

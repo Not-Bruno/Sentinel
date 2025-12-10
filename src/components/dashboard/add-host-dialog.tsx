@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { Host } from "@/lib/types";
 
 const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
@@ -37,7 +38,7 @@ const formSchema = z.object({
 type AddHostFormValues = z.infer<typeof formSchema>;
 
 interface AddHostDialogProps {
-  onAddHost: (values: AddHostFormValues) => void;
+  onAddHost: (host: Host) => void;
 }
 
 export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
@@ -52,7 +53,18 @@ export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
   });
 
   function onSubmit(values: AddHostFormValues) {
-    onAddHost(values);
+    const newHost: Host = {
+        id: self.crypto.randomUUID(),
+        ...values,
+        status: 'offline',
+        createdAt: Date.now(),
+        containers: [],
+        history: [],
+        cpuUsage: 0,
+        memoryUsage: 0,
+        diskUsage: 0,
+    };
+    onAddHost(newHost);
     form.reset();
     setOpen(false);
   }
