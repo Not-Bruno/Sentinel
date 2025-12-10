@@ -216,23 +216,32 @@ function parseDockerPsJson(stdout: string | null): Container[] {
     const containers: Container[] = containerJsonLines.map(line => {
         try {
           const dockerInfo = JSON.parse(line);
-          let status: Container['status'] = 'stopped';
-          
-          if (dockerInfo.State === 'running') {
-            status = 'running';
-          } else if (dockerInfo.State === 'exited' || dockerInfo.State === 'created') {
-            // Prüfe den Exit-Code, um zwischen "gestoppt" und "Fehler" zu unterscheiden
-            const exitCodeMatch = dockerInfo.Status.match(/Exited \((\d+)\)/);
-            if (exitCodeMatch) {
-              const exitCode = parseInt(exitCodeMatch[1], 10);
-              status = exitCode === 0 ? 'stopped' : 'error';
-            } else {
-              // Fallback für Zustände wie "Created"
-              status = 'stopped';
-            }
-          } else {
-            // Alle anderen Zustände (restarting, removing, paused, dead) werden als Fehler gewertet.
-            status = 'error';
+
+          let status: Container['status'];
+
+          switch (dockerInfo.State) {
+              case 'running':
+                  status = 'running';
+                  break;
+              case 'exited':
+                  // The container is stopped, but we need to check the exit code to determine if it was an error.
+                  const exitCodeMatch = dockerInfo.Status.match(/Exited \((\d+)\)/);
+                  if (exitCodeMatch) {
+                      const exitCode = parseInt(exitCodeMatch[1], 10);
+                      status = exitCode === 0 ? 'stopped' : 'error';
+                  } else {
+                      // If we can't determine the exit code, we'll just mark it as stopped.
+                      status = 'stopped';
+                  }
+                  break;
+              case 'created':
+                  // The container has been created but not started yet.
+                  status = 'stopped';
+                  break;
+              default:
+                  // All other states (restarting, removing, paused, dead) are considered errors.
+                  status = 'error';
+                  break;
           }
           
           // Robustere Datumsumwandlung

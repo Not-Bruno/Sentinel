@@ -29,6 +29,7 @@ export function DatabaseStatusIndicator({ status }: DatabaseStatusIndicatorProps
             <Tooltip>
                 <TooltipTrigger>
                     <div className="flex items-center gap-2">
+                         <Icon className={cn("h-4 w-4", status === 'connected' ? 'text-green-500' : 'text-red-500')} />
                         <div className={cn("w-3 h-3 rounded-full animate-pulse", color)} />
                     </div>
                 </TooltipTrigger>
