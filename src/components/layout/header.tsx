@@ -1,15 +1,17 @@
 import Link from "next/link";
-import { LineChart, ShieldCheck } from "lucide-react";
 import { AddHostDialog } from "@/components/dashboard/add-host-dialog";
 import { Logo } from "@/components/logo";
-import { Button } from "../ui/button";
 import { ThemeToggle } from "./theme-toggle";
+import { getSavedHosts, saveHosts } from "@/ai/flows/manage-hosts-flow";
+import { Host } from "@/lib/types";
+import { AddHostButton } from "./add-host-button";
 
 interface HeaderProps {
-  onAddHost: (host: { name: string; ipAddress: string; sshPort: number; }) => void;
+  children: React.ReactNode;
 }
 
-export function Header({ onAddHost }: HeaderProps) {
+export function Header({ children }: HeaderProps) {
+  
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 border-b shrink-0 bg-background sm:px-6 md:px-8">
       <div className="flex items-center gap-3">
@@ -18,14 +20,11 @@ export function Header({ onAddHost }: HeaderProps) {
           Sentinel
         </Link>
       </div>
+      
+      {children}
+
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/monitoring">
-            <LineChart className="h-4 w-4" />
-            <span className="sr-only">Monitoring</span>
-          </Link>
-        </Button>
-        <AddHostDialog onAddHost={onAddHost} />
+        <AddHostButton />
         <ThemeToggle />
       </div>
     </header>

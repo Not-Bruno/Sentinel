@@ -3,12 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-import { Header } from "@/components/layout/header";
-import { Dashboard } from "@/components/dashboard/dashboard";
 import type { Host, HostMetric } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getHostData } from "@/ai/flows/get-host-containers-flow";
 import { getSavedHosts, saveHosts } from "@/ai/flows/manage-hosts-flow";
+import { Dashboard } from "@/components/dashboard/dashboard";
 
 const MAX_HISTORY_AGE = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
@@ -171,7 +170,7 @@ export default function SentinelPage() {
   }, []);
 
   const LoadingSkeleton = () => (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
       {[...Array(3)].map((_, i) => (
         <div key={i} className="flex flex-col space-y-3">
           <Skeleton className="h-[250px] w-full rounded-xl" />
@@ -181,11 +180,8 @@ export default function SentinelPage() {
   )
 
   return (
-    <div className="flex flex-col min-h-screen bg-secondary/40">
-      <Header onAddHost={addHost} />
-      <main className="flex-1 p-4 sm:p-6 md:p-8">
-        {loading && hosts.length === 0 ? <LoadingSkeleton /> : <Dashboard hosts={hosts} onRemoveHost={removeHost} onRemoveContainer={removeContainer} />}
-      </main>
-    </div>
+    <>
+      {loading && hosts.length === 0 ? <LoadingSkeleton /> : <Dashboard hosts={hosts} onRemoveHost={removeHost} onRemoveContainer={removeContainer} addHost={addHost} />}
+    </>
   );
 }
