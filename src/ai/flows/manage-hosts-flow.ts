@@ -17,7 +17,7 @@ function parseDbHost(dbHost: any): Host {
         sshPort: dbHost.ssh_port,
         status: dbHost.status,
         createdAt: Number(dbHost.created_at),
-        containers: JSON.parse(dbHost.containers || '[]'),
+        containers: dbHost.containers || [], // Already parsed by mysql2 driver if column is JSON
         cpuUsage: dbHost.cpu_usage,
         memoryUsage: dbHost.memory_usage,
         memoryUsedGb: dbHost.memory_used_gb,
@@ -25,7 +25,7 @@ function parseDbHost(dbHost: any): Host {
         diskUsage: dbHost.disk_usage,
         diskUsedGb: dbHost.disk_used_gb,
         diskTotalGb: dbHost.disk_total_gb,
-        history: JSON.parse(dbHost.history || '[]'),
+        history: dbHost.history || [], // Already parsed by mysql2 driver if column is JSON
     };
 }
 
@@ -123,8 +123,9 @@ const updateHostFlow = ai.defineFlow({
             host.ipAddress,
             host.sshPort ?? 22,
             host.status,
-            JSON.stringify(host.containers || []),
-            JSON.stringify(host.history || []),
+            // Ensure we are not double-stringifying
+            typeof host.containers === 'string' ? host.containers : JSON.stringify(host.containers || []),
+            typeof host.history === 'string' ? host.history : JSON.stringify(host.history || []),
             host.cpuUsage,
             host.memoryUsage,
             host.memoryUsedGb,

@@ -30,7 +30,7 @@ export async function initDB() {
         ssh_port INT DEFAULT 22,
         status VARCHAR(50) NOT NULL,
         created_at BIGINT NOT NULL,
-        containers TEXT,
+        containers JSON,
         cpu_usage FLOAT,
         memory_usage FLOAT,
         memory_used_gb FLOAT,
@@ -38,7 +38,7 @@ export async function initDB() {
         disk_usage FLOAT,
         disk_used_gb FLOAT,
         disk_total_gb FLOAT,
-        history TEXT
+        history JSON
       )
     `;
     
@@ -47,7 +47,9 @@ export async function initDB() {
 
   } catch (error) {
     console.error('[DB] Database initialization failed:', error);
-    // Do not exit the process, allow the app to handle the disconnected state
+    // Allow the app to handle the disconnected state by re-throwing the error.
+    // This is better than exiting the process, as it allows for more graceful failure modes.
+    throw error;
   } finally {
     if (connection) {
       connection.release();
