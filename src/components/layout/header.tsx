@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export function Header({ children }: HeaderProps) {
-  const { addHost, dbStatus } = useHosts();
+  const { dbStatus } = useHosts();
   
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 border-b shrink-0 bg-background sm:px-6 md:px-8">
@@ -29,7 +29,7 @@ export function Header({ children }: HeaderProps) {
 
       <div className="flex items-center gap-2">
         <DatabaseStatusIndicator status={dbStatus} />
-        <AddHostDialog onAddHost={addHost} />
+        <AddHostDialog />
         <ThemeToggle />
       </div>
     </header>
