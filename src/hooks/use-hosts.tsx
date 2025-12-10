@@ -6,6 +6,10 @@ import { getHostData } from '@/ai/flows/get-host-containers-flow';
 import { getSavedHosts, saveHost, updateHost, deleteHost, checkDbConnection } from '@/ai/flows/manage-hosts-flow';
 import type { Host, DatabaseStatus } from '@/lib/types';
 
+// Importiert die zentrale Registry, um sicherzustellen, dass die Flows in Next.js bekannt sind.
+import '@/ai/genkit-registry';
+
+
 const MAX_HISTORY_ENTRIES = 100; // Limit the number of history entries per host
 
 interface HostContextType {
