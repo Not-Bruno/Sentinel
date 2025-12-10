@@ -22,16 +22,29 @@ const GetHostDataInputSchema = z.object({
 });
 export type GetHostDataInput = z.infer<typeof GetHostDataInputSchema>;
 
-export interface GetHostDataOutput {
-  containers: Container[];
-  cpuUsage?: number;
-  memoryUsage?: number;
-  memoryUsedGb?: number;
-  memoryTotalGb?: number;
-  diskUsage?: number;
-  diskUsedGb?: number;
-  diskTotalGb?: number;
-}
+const ContainerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  image: z.string(),
+  status: z.enum(['running', 'stopped', 'error']),
+  uptime: z.string(),
+  createdAt: z.number(),
+  cpuUsage: z.number().optional(),
+  memoryUsage: z.number().optional(),
+});
+
+const GetHostDataOutputSchema = z.object({
+    containers: z.array(ContainerSchema),
+    cpuUsage: z.number().optional(),
+    memoryUsage: z.number().optional(),
+    memoryUsedGb: z.number().optional(),
+    memoryTotalGb: z.number().optional(),
+    diskUsage: z.number().optional(),
+    diskUsedGb: z.number().optional(),
+    diskTotalGb: z.number().optional(),
+});
+export type GetHostDataOutput = z.infer<typeof GetHostDataOutputSchema>;
+
 
 // Dies ist eine Wrapper-Funktion, die den eigentlichen Flow aufruft.
 export async function getHostData(input: GetHostDataInput): Promise<GetHostDataOutput> {
@@ -42,7 +55,7 @@ const getHostDataFlow = ai.defineFlow(
   {
     name: 'getHostDataFlow',
     inputSchema: GetHostDataInputSchema,
-    outputSchema: z.any(),
+    outputSchema: GetHostDataOutputSchema,
   },
   async (input): Promise<GetHostDataOutput> => {
     // Befehle zum Abrufen der Systemmetriken und Container-Infos
