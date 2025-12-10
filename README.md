@@ -1,9 +1,8 @@
-
 # Sentinel - Echtzeit-Monitoring für Docker-Container
 
 ![Sentinel Dashboard](https://placehold.co/1200/800/1e293b/ffffff/png?text=Sentinel+Dashboard)
 
-Sentinel ist eine moderne, webbasierte Anwendung zur Echtzeit-Überwachung des Status von Docker-Containern auf verschiedenen Servern. Egal, ob die Container lokal oder auf Remote-Servern via SSH laufen – Sentinel bietet dir den perfekten Überblick, unterstützt durch eine KI-gestützte Backend-Logik.
+Sentinel ist eine moderne, webbasierte Anwendung zur Echtzeit-Überwachung des Status von Docker-Containern auf verschiedenen Servern. Egal, ob die Container lokal oder auf Remote-Servern via SSH laufen – Sentinel bietet dir den perfekten Überblick, unterstützt durch eine KI-gestützte Backend-Logik und eine persistente MariaDB-Datenbank.
 
 Die Anwendung wurde mit **Next.js** und **Tailwind CSS** entwickelt und ist für einen kinderleichten Betrieb im eigenen Docker-Container optimiert.
 
@@ -13,9 +12,8 @@ Die Anwendung wurde mit **Next.js** und **Tailwind CSS** entwickelt und ist für
 
 - **Echtzeit-Überwachung:** Sieh live, ob deine Docker-Container laufen, gestoppt sind oder einen Fehler haben.
 - **Multi-Host-Fähigkeit:** Überwache Container auf deinem lokalen System und beliebig vielen Remote-Servern über SSH.
-- **Automatische Host-Erkennung:** Sentinel überwacht standardmäßig den Host, auf dem es läuft, ohne zusätzliche Konfiguration.
+- **Persistente Speicherung:** Deine Host-Konfigurationen werden in einer robusten MariaDB-Datenbank gespeichert und bleiben auch nach Neustarts erhalten.
 - **Performance-Analyse:** Detaillierte Analyse-Seiten für Server-Performance (CPU, RAM, Disk) und Container-Auslastung mit historischen Graphen.
-- **Persistente Konfiguration:** Deine Liste von überwachten Servern wird dauerhaft gespeichert.
 - **Modernes & Anpassbares UI:** Eine saubere, reaktionsschnelle Benutzeroberfläche mit Dark Mode.
 - **Einfache Bereitstellung:** Mit einer einzigen `docker-compose.yml`-Datei ist Sentinel blitzschnell einsatzbereit.
 
@@ -25,7 +23,7 @@ Die Anwendung wurde mit **Next.js** und **Tailwind CSS** entwickelt und ist für
 
 - **Frontend:** Next.js (React Framework)
 - **Styling:** Tailwind CSS & shadcn/ui
-- **Sprache:** TypeScript
+- **Datenbank:** MariaDB
 - **Backend-Logik:** Genkit (für die Verwaltung von SSH-Verbindungen und lokalen Befehlen)
 - **Containerisierung:** Docker & Docker Compose
 
@@ -46,23 +44,17 @@ Führe den folgenden Befehl im Hauptverzeichnis des Projekts aus:
 ```bash
 docker-compose up --build -d
 ```
-Dieser Befehl baut das Docker-Image für Sentinel, startet den Container im Hintergrund (`-d`) und stellt sicher, dass er bei einem Neustart des Systems automatisch wieder gestartet wird.
+Dieser Befehl baut die Docker-Images für Sentinel und die MariaDB-Datenbank, startet die Container im Hintergrund (`-d`) und stellt sicher, dass sie bei einem Neustart des Systems automatisch wieder gestartet werden.
 
 #### 3. Sentinel öffnen
-Öffne deinen Webbrowser und navigiere zu `http://localhost:3000`. Du solltest sofort das Sentinel-Dashboard sehen, das bereits die Container deines lokalen Host-Systems anzeigt.
+Öffne deinen Webbrowser und navigiere zu `http://localhost:3000`. Du solltest das Sentinel-Dashboard sehen, das bereits die Container deines lokalen Host-Systems anzeigt.
 
 ---
 
 ## ⚙️ Konfiguration
 
 ### Lokaler Host
-Standardmäßig liest Sentinel die Docker-Informationen deines Host-Systems über den Docker-Socket (`/var/run/docker.sock`). Dies wird in der `docker-compose.yml` durch das Mounten des Sockets ermöglicht:
-
-```yaml
-volumes:
-  - /var/run/docker.sock:/var/run/docker.sock
-```
-Für die Überwachung deines lokalen Systems ist **keine weitere Konfiguration nötig**.
+Standardmäßig liest Sentinel die Docker-Informationen deines Host-Systems über den Docker-Socket (`/var/run/docker.sock`). Dies wird in der `docker-compose.yml` durch das Mounten des Sockets ermöglicht. Für die Überwachung deines lokalen Systems ist **keine weitere Konfiguration nötig**.
 
 ### Remote-Hosts (via SSH)
 Um zusätzliche Server zu überwachen, muss Sentinel Zugriff über einen privaten SSH-Schlüssel erhalten.
@@ -95,13 +87,13 @@ services:
   sentinel:
     # ... andere Konfigurationen
     environment:
-      - NODE_ENV=production
+      # ...
       # Wichtig: Den Schlüssel als einzeiligen String einfügen und das Kommentarzeichen entfernen
       - SSH_PRIVATE_KEY=DEIN_FORMATIERTER_SCHLUESSEL
 ```
 
 #### 4. Container neu starten
-Nachdem du die `docker-compose.yml` geändert hast, starte den Container neu, damit die Änderungen wirksam werden:
+Nachdem du die `docker-compose.yml` geändert hast, starte die Container neu, damit die Änderungen wirksam werden:
 ```bash
 docker-compose up --build -d
 ```
@@ -113,14 +105,13 @@ Klicke im Sentinel-Dashboard auf **"Host hinzufügen"** und gib den Namen, die I
 
 ## 💾 Persistente Speicherung
 
-Die Liste der von dir hinzugefügten Hosts wird in der Datei `/app/data/hosts.json` innerhalb des Containers gespeichert. Damit diese Liste auch dann erhalten bleibt, wenn der Container neu erstellt wird, verwendet die `docker-compose.yml` ein **named Volume** (`sentinel-data`):
+Alle deine Host-Informationen und Metriken werden in der MariaDB-Datenbank gespeichert. Die `docker-compose.yml` verwendet ein **named Volume** (`mariadb-data`), um die Datenbankdateien dauerhaft auf deinem Host-System zu sichern, selbst wenn der Datenbank-Container neu erstellt wird.
 
 ```yaml
 volumes:
-  sentinel-data:
+  mariadb-data:
     driver: local
 ```
-Dieses Volume stellt sicher, dass deine Host-Liste sicher auf deinem Host-System gespeichert wird.
 
 ---
 
@@ -128,14 +119,12 @@ Dieses Volume stellt sicher, dass deine Host-Liste sicher auf deinem Host-System
 
 ```
 .
-├── data/
-│   └── hosts.json        # Speichert die Liste deiner überwachten Hosts.
 ├── src/
 │   ├── app/              # Next.js App Router, Seiten und Layouts.
 │   ├── components/       # Wiederverwendbare React-Komponenten (UI-Elemente).
-│   ├── ai/               # Genkit-Flows für die Server-Logik (SSH, Dateizugriff etc.).
-│   └── lib/              # Hilfsfunktionen, Typ-Definitionen und mehr.
-├── Dockerfile            # Definiert, wie das Docker-Image gebaut wird.
-├── docker-compose.yml    # Definiert den Sentinel-Service und verknüpfte Volumes.
+│   ├── ai/               # Genkit-Flows für die Server-Logik (SSH, DB-Zugriff etc.).
+│   └── lib/              # Hilfsfunktionen, Typ-Definitionen und DB-Logik.
+├── Dockerfile            # Definiert, wie das Docker-Image für die App gebaut wird.
+├── docker-compose.yml    # Definiert die Services für App und Datenbank.
 └── next.config.ts        # Konfigurationsdatei für Next.js.
 ```

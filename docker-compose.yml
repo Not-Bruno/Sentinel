@@ -12,6 +12,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - NODE_ENV=production
+      # --- Datenbank-Konfiguration (Standardwerte, können angepasst werden) ---
       - DB_HOST=mariadb
       - DB_PORT=3306
       - DB_USER=sentinel
