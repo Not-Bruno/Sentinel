@@ -5,37 +5,19 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getConnection, initDB } from '@/lib/db';
+import { getConnection } from '@/lib/db';
 import type { Host, DatabaseStatus } from '@/lib/types';
 import { RowDataPacket } from 'mysql2';
 
-// Initialize the database and create tables if they don't exist
-initDB();
-
-const hostSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  ipAddress: z.string(),
-  sshPort: z.number().optional().nullable(),
-  status: z.enum(['online', 'offline']),
-  createdAt: z.number(),
-  containers: z.string(), // JSON string
-  cpuUsage: z.number().optional().nullable(),
-  memoryUsage: z.number().optional().nullable(),
-  memoryUsedGb: z.number().optional().nullable(),
-  memoryTotalGb: z.number().optional().nullable(),
-  diskUsage: z.number().optional().nullable(),
-  diskUsedGb: z.number().optional().nullable(),
-  diskTotalGb: z.number().optional().nullable(),
-  history: z.string(), // JSON string
-});
-
 function parseDbHost(dbHost: any): Host {
     return {
-        ...dbHost,
-        sshPort: dbHost.ssh_port,
+        id: dbHost.id,
+        name: dbHost.name,
         ipAddress: dbHost.ip_address,
+        sshPort: dbHost.ssh_port,
+        status: dbHost.status,
         createdAt: Number(dbHost.created_at),
+        containers: JSON.parse(dbHost.containers || '[]'),
         cpuUsage: dbHost.cpu_usage,
         memoryUsage: dbHost.memory_usage,
         memoryUsedGb: dbHost.memory_used_gb,
@@ -43,7 +25,6 @@ function parseDbHost(dbHost: any): Host {
         diskUsage: dbHost.disk_usage,
         diskUsedGb: dbHost.disk_used_gb,
         diskTotalGb: dbHost.disk_total_gb,
-        containers: JSON.parse(dbHost.containers || '[]'),
         history: JSON.parse(dbHost.history || '[]'),
     };
 }

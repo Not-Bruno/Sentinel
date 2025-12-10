@@ -71,19 +71,19 @@ const getHostDataFlow = ai.defineFlow(
       disk: `df -BG -h / --output=size,used,pcent | awk 'NR==2{print $1, $2, $3}'`,
     };
 
-    const executeCommand = (command: string): Promise<string> => {
-      return new Promise((resolve, reject) => {
+    const executeCommand = (command: string): Promise<string | null> => {
+      return new Promise((resolve) => {
         exec(command, (error, stdout, stderr) => {
           if (error) {
             console.error(`Fehler bei lokaler Ausführung von "${command}":`, stderr);
-            return resolve(''); 
+            return resolve(null); 
           }
           resolve(stdout.trim());
         });
       });
     };
 
-     const parseDfOutput = (output: string): { diskUsedGb?: number; diskTotalGb?: number; diskUsage?: number } => {
+     const parseDfOutput = (output: string | null): { diskUsedGb?: number; diskTotalGb?: number; diskUsage?: number } => {
         if (!output) return {};
         // Example output: "458G 151G 34%"
         const parts = output.replace(/G/g, '').replace(/M/g, '').replace(/K/g, '').replace(/%/g, '').split(/\s+/);
@@ -100,7 +100,7 @@ const getHostDataFlow = ai.defineFlow(
         };
     };
 
-    const parseFreeOutput = (output: string): { memoryUsedGb?: number; memoryTotalGb?: number; memoryUsage?: number } => {
+    const parseFreeOutput = (output: string | null): { memoryUsedGb?: number; memoryTotalGb?: number; memoryUsage?: number } => {
         if (!output) return {};
         // Example output: "16028592 5592348" (in KB)
         const parts = output.split(' ');
@@ -121,7 +121,7 @@ const getHostDataFlow = ai.defineFlow(
         };
     }
 
-    const executeAndParse = async (executor: (cmd: string) => Promise<string>) => {
+    const executeAndParse = async (executor: (cmd: string) => Promise<string | null>) => {
         const [containerOutput, statsOutput, cpuOutput, memoryOutput, diskOutput] = await Promise.all([
             executor(commands.containers),
             executor(commands.containerStats),
@@ -183,7 +183,7 @@ const getHostDataFlow = ai.defineFlow(
         const result = await ssh.execCommand(command);
         if (result.code !== 0) {
             console.error(`Fehler bei SSH-Ausführung von "${command}":`, result.stderr);
-            return '';
+            return null;
         }
         return result.stdout.trim();
       };
@@ -192,7 +192,7 @@ const getHostDataFlow = ai.defineFlow(
 
     } catch (error) {
       console.error(`Fehler bei SSH-Verbindung oder Befehl für Host ${input.ipAddress}:`, error);
-      return { containers: [], cpuUsage: undefined, memoryUsage: undefined };
+      return { containers: [], cpuUsage: 0, memoryUsage: 0, diskUsage: 0 };
     } finally {
       if (ssh.isConnected()) {
         ssh.dispose();
@@ -206,12 +206,11 @@ const getHostDataFlow = ai.defineFlow(
  * @param stdout Die rohe Ausgabe des Befehls.
  * @returns Ein Array von Container-Objekten.
  */
-function parseDockerPsJson(stdout: string): Container[] {
-    const trimmedStdout = stdout.trim();
-    if (!trimmedStdout) {
+function parseDockerPsJson(stdout: string | null): Container[] {
+    if (!stdout) {
       return [];
     }
-    const containerJsonLines = trimmedStdout.split('\n');
+    const containerJsonLines = stdout.trim().split('\n');
     
     const containers: Container[] = containerJsonLines.map(line => {
         try {
@@ -261,7 +260,7 @@ function parseDockerPsJson(stdout: string): Container[] {
  * @param stdout Die rohe Ausgabe des Befehls.
  * @returns Ein Objekt mit Container-IDs als Schlüssel und deren Stats als Wert.
  */
-function parseDockerStatsJson(stdout: string): Record<string, { cpuUsage: number; memoryUsage: number }> {
+function parseDockerStatsJson(stdout: string | null): Record<string, { cpuUsage: number; memoryUsage: number }> {
     const stats: Record<string, { cpuUsage: number; memoryUsage: number }> = {};
     if (!stdout) return stats;
 
