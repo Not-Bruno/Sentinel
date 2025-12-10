@@ -11,8 +11,14 @@ import { Dashboard } from "@/components/dashboard/dashboard";
 
 const MAX_HISTORY_AGE = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-export default function SentinelPage() {
-  const [hosts, setHosts] = useState<Host[]>([]);
+interface SentinelPageProps {
+  hosts: Host[];
+  setHosts: (hosts: Host[]) => void;
+  addHost: (data: { name: string; ipAddress: string; sshPort: number }) => void;
+}
+
+
+export default function SentinelPage({ hosts, setHosts, addHost }: SentinelPageProps) {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const hostsRef = useRef<Host[]>([]);
@@ -76,7 +82,7 @@ export default function SentinelPage() {
   }, []);
   
   const refreshAllHosts = useCallback(async (currentHosts: Host[]) => {
-    if (currentHosts.length === 0) return;
+    if (!currentHosts || currentHosts.length === 0) return;
     try {
         const refreshedHosts = await Promise.all(currentHosts.map(host => fetchHostData(host)));
         setHosts(refreshedHosts);
@@ -85,7 +91,7 @@ export default function SentinelPage() {
     } catch (error) {
         console.error("Error refreshing hosts:", error);
     }
-  }, [fetchHostData]);
+  }, [fetchHostData, setHosts]);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -120,28 +126,6 @@ export default function SentinelPage() {
     return () => clearInterval(interval);
   }, [refreshAllHosts]);
   
-  const addHost = useCallback(async (data: { name: string; ipAddress: string; sshPort: number }) => {
-    const newHost: Host = {
-      id: `host-${Date.now()}`,
-      ...data,
-      status: 'online', // Assume online initially
-      createdAt: Date.now(),
-      containers: [],
-      history: [],
-    };
-    
-    // Show loading state for the new host
-    setHosts(currentHosts => [newHost, ...currentHosts]);
-
-    const hostWithData = await fetchHostData(newHost);
-    
-    setHosts(currentHosts => {
-      const updatedHosts = currentHosts.map(h => h.id === newHost.id ? hostWithData : h);
-      saveHosts(updatedHosts).catch(err => console.error("Failed to save hosts:", err));
-      return updatedHosts;
-    });
-
-  }, [fetchHostData]);
   
   const removeHost = useCallback((hostId: string) => {
     setHosts(currentHosts => {
@@ -153,7 +137,7 @@ export default function SentinelPage() {
         title: "Host Removed",
         description: `Stopped monitoring host.`,
     });
-  }, [toast]);
+  }, [toast, setHosts]);
 
   const removeContainer = useCallback((hostId: string, containerId: string) => {
     // This action is temporary and visual only, it doesn't persist.
@@ -167,7 +151,7 @@ export default function SentinelPage() {
       }
       return h;
     }));
-  }, []);
+  }, [setHosts]);
 
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
@@ -181,7 +165,7 @@ export default function SentinelPage() {
 
   return (
     <>
-      {loading && hosts.length === 0 ? <LoadingSkeleton /> : <Dashboard hosts={hosts} onRemoveHost={removeHost} onRemoveContainer={removeContainer} addHost={addHost} />}
+      {loading && (!hosts || hosts.length === 0) ? <LoadingSkeleton /> : <Dashboard hosts={hosts} onRemoveHost={removeHost} onRemoveContainer={removeContainer} addHost={addHost} />}
     </>
   );
 }
