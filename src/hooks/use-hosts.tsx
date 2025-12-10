@@ -12,7 +12,7 @@ interface HostContextType {
   hosts: Host[];
   loading: boolean;
   dbStatus: DatabaseStatus;
-  addHost: (newHost: Host) => Promise<void>;
+  addHost: (newHost: Omit<Host, 'createdAt'>) => Promise<void>;
   removeHost: (hostId: string) => Promise<void>;
   refreshAllHosts: (currentHosts: Host[]) => Promise<void>;
 }
@@ -92,29 +92,38 @@ export function HostProvider({ children }: { children: ReactNode }) {
     }
   }, [toast]);
 
-  const addHost = useCallback(async (newHost: Host) => {
+  const addHost = useCallback(async (hostToAdd: Omit<Host, 'createdAt'>) => {
     try {
-      await saveHost(newHost);
-      setHosts(prevHosts => [newHost, ...prevHosts]);
-      toast({
-          title: "Host hinzugefügt",
-          description: `Der Host "${newHost.name}" wird jetzt überwacht.`,
-      });
-      
-      // Fetch initial data async
-      fetchHostData(newHost).then(fetchedHost => {
-        setHosts(prev => prev.map(h => h.id === newHost.id ? fetchedHost : h));
-      });
+        await saveHost(hostToAdd);
+
+        // After saving, get the full list to get the generated createdAt
+        const allHosts = await getSavedHosts();
+        const newlyAddedHost = allHosts.find(h => h.id === hostToAdd.id);
+
+        if (newlyAddedHost) {
+            setHosts(prevHosts => [newlyAddedHost, ...prevHosts.filter(h => h.id !== hostToAdd.id)]);
+            toast({
+                title: "Host hinzugefügt",
+                description: `Der Host "${newlyAddedHost.name}" wird jetzt überwacht.`,
+            });
+
+            // Asynchronously fetch live data for the new host
+            fetchHostData(newlyAddedHost).then(fetchedHost => {
+                setHosts(prev => prev.map(h => h.id === fetchedHost.id ? fetchedHost : h));
+            });
+        } else {
+          throw new Error('Could not find host after adding it.');
+        }
 
     } catch (error) {
-         console.error("Error adding host:", error);
-         toast({
+        console.error("Error adding host:", error);
+        toast({
             title: "Fehler beim Hinzufügen",
-            description: (error as Error).message || `Der Host "${newHost.name}" konnte nicht hinzugefügt werden.`,
+            description: `Der Host "${hostToAdd.name}" konnte aufgrund eines Serverfehlers nicht hinzugefügt werden.`,
             variant: "destructive"
-         });
+        });
     }
-  }, [fetchHostData, toast]);
+}, [fetchHostData, toast]);
 
   const removeHost = useCallback(async (hostId: string) => {
     try {

@@ -49,6 +49,9 @@ const HostSchema = z.object({
   history: z.array(HostMetricSchema),
 });
 
+// This schema represents the data we expect when creating a host.
+const HostToSaveSchema = HostSchema.omit({ createdAt: true });
+
 function parseDbHost(dbHost: any): Host {
     const parseJson = (field: any) => {
         if (typeof field === 'string') {
@@ -134,14 +137,14 @@ const getSavedHostsFlow = ai.defineFlow(
 const saveHostFlow = ai.defineFlow(
   {
     name: 'saveHostFlow',
-    inputSchema: HostSchema,
+    inputSchema: HostToSaveSchema,
   },
-  async (host: Host): Promise<void> => {
+  async (host: z.infer<typeof HostToSaveSchema>): Promise<void> => {
     const conn = await getConnection();
     try {
       const query = `
-        INSERT INTO hosts (id, name, ip_address, ssh_port, status, created_at, containers, history, cpu_usage, memory_usage, memory_used_gb, memory_total_gb, disk_usage, disk_used_gb, disk_total_gb)
-        VALUES (?, ?, ?, ?, ?, FROM_UNIXTIME(?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO hosts (id, name, ip_address, ssh_port, status, containers, history, cpu_usage, memory_usage, memory_used_gb, memory_total_gb, disk_usage, disk_used_gb, disk_total_gb)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const values = [
         host.id,
@@ -149,16 +152,15 @@ const saveHostFlow = ai.defineFlow(
         host.ipAddress,
         host.sshPort ?? 22,
         host.status,
-        host.createdAt / 1000, // Convert ms timestamp to seconds for FROM_UNIXTIME
         JSON.stringify(host.containers || []),
         JSON.stringify(host.history || []),
-        host.cpuUsage,
-        host.memoryUsage,
-        host.memoryUsedGb,
-        host.memoryTotalGb,
-        host.diskUsage,
-        host.diskUsedGb,
-        host.diskTotalGb
+        host.cpuUsage ?? 0,
+        host.memoryUsage ?? 0,
+        host.memoryUsedGb ?? 0,
+        host.memoryTotalGb ?? 0,
+        host.diskUsage ?? 0,
+        host.diskUsedGb ?? 0,
+        host.diskTotalGb ?? 0
       ];
       await conn.query(query, values);
     } catch (error) {
@@ -188,13 +190,13 @@ const updateHostFlow = ai.defineFlow({
             host.status,
             JSON.stringify(host.containers || []),
             JSON.stringify(host.history || []),
-            host.cpuUsage,
-            host.memoryUsage,
-            host.memoryUsedGb,
-            host.memoryTotalGb,
-            host.diskUsage,
-            host.diskUsedGb,
-            host.diskTotalGb,
+            host.cpuUsage ?? 0,
+            host.memoryUsage ?? 0,
+            host.memoryUsedGb ?? 0,
+            host.memoryTotalGb ?? 0,
+            host.diskUsage ?? 0,
+            host.diskUsedGb ?? 0,
+            host.diskTotalGb ?? 0,
             host.id
         ];
         await conn.query(query, values);
@@ -227,7 +229,7 @@ export async function getSavedHosts(): Promise<Host[]> {
     return getSavedHostsFlow();
 }
 
-export async function saveHost(host: Host): Promise<void> {
+export async function saveHost(host: z.infer<typeof HostToSaveSchema>): Promise<void> {
     return saveHostFlow(host);
 }
 

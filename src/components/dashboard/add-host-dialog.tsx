@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Host } from "@/lib/types";
+import { useHosts } from "@/hooks/use-hosts";
 
 const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
@@ -37,11 +38,7 @@ const formSchema = z.object({
 
 type AddHostFormValues = z.infer<typeof formSchema>;
 
-interface AddHostDialogProps {
-  onAddHost: (host: Host) => void;
-}
 
-// Basic UUID generator that doesn't require a secure context
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -49,8 +46,9 @@ function generateUUID() {
   });
 }
 
-export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
+export function AddHostDialog() {
   const [open, setOpen] = useState(false);
+  const { addHost } = useHosts();
   const form = useForm<AddHostFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,18 +59,21 @@ export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
   });
 
   function onSubmit(values: AddHostFormValues) {
-    const newHost: Host = {
+    const newHost: Omit<Host, 'createdAt'> = {
         id: generateUUID(),
         ...values,
         status: 'offline',
-        createdAt: Date.now(),
         containers: [],
         history: [],
         cpuUsage: 0,
         memoryUsage: 0,
+        memoryUsedGb: 0,
+        memoryTotalGb: 0,
         diskUsage: 0,
+        diskUsedGb: 0,
+        diskTotalGb: 0,
     };
-    onAddHost(newHost);
+    addHost(newHost);
     form.reset();
     setOpen(false);
   }
