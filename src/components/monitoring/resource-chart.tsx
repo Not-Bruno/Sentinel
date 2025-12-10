@@ -7,11 +7,9 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
-import type { Host } from '@/lib/types';
+import type { HostMetric } from '@/lib/types';
 import { format } from 'date-fns';
 import {
   ChartContainer,
@@ -20,84 +18,99 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
 interface ResourceChartProps {
-  host: Host;
+  title: string;
+  history: HostMetric[];
   dataKey: 'cpuUsage' | 'memoryUsage';
   unit: string;
+  containerId?: string;
+  containerName?: string;
+  chartId: string;
 }
 
-const COLORS = [
-  '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe', 
-  '#00c49f', '#ffbb28', '#ff8042', '#a4de6c', '#d0ed57'
-];
-
-
-export function ResourceChart({ host, dataKey, unit }: ResourceChartProps) {
+export function ResourceChart({ title, history, dataKey, unit, containerId, containerName, chartId }: ResourceChartProps) {
+  
   const chartData = useMemo(() => {
-    return host.history?.map((entry) => ({
-      name: format(new Date(entry.timestamp), 'HH:mm'),
-      [host.name]: entry[dataKey],
-    })) || [];
-  }, [host, dataKey]);
+    return history.map((entry) => {
+      let value;
+      if (containerId) {
+        value = entry.containers?.[containerId]?.[dataKey] ?? null;
+      } else {
+        value = entry[dataKey];
+      }
+      return {
+        name: format(new Date(entry.timestamp), 'HH:mm'),
+        value: value,
+      };
+    }).filter(d => d.value !== null);
+  }, [history, dataKey, containerId]);
 
-  const chartConfig = useMemo(() => {
-    const config: any = {
-      [host.name]: {
-        label: host.name,
-        color: COLORS[0],
-      },
-    };
-    return config;
-  }, [host.name]);
+  const dataName = containerName || 'Host';
+
+  const chartConfig = useMemo(() => ({
+    [dataName]: {
+      label: dataName,
+      color: "hsl(var(--chart-1))",
+    },
+  }), [dataName]);
   
   if (!chartData || chartData.length === 0) {
     return (
-      <div className="flex items-center justify-center h-80 text-muted-foreground">
-        Keine Verlaufsdaten für diesen Host verfügbar.
+      <div className="flex flex-col items-center justify-center h-60 text-muted-foreground p-4 text-center">
+         <p className='font-semibold'>{title}</p>
+        <p className='text-sm'>Keine Verlaufsdaten für diesen Zeitraum verfügbar.</p>
       </div>
     );
   }
 
   return (
-    <div className="h-80 w-full">
-        <ChartContainer config={chartConfig} className="h-full w-full">
-            <ResponsiveContainer>
-            <LineChart
-                data={chartData}
-                margin={{
-                top: 5,
-                right: 30,
-                left: 0,
-                bottom: 5,
-                }}
-            >
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                <YAxis unit={unit} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                <Tooltip
-                    content={
-                        <ChartTooltipContent
-                        indicator="dot"
-                        labelFormatter={(label) => format(new Date(), `dd.MM.yy, ${label}`)}
+    <Card className='border-none shadow-none'>
+        <CardHeader className='p-0 mb-4'>
+            <CardTitle className='text-base font-semibold'>{title}</CardTitle>
+        </CardHeader>
+        <CardContent className='p-0'>
+            <div className="h-60 w-full">
+                <ChartContainer config={chartConfig} className="h-full w-full">
+                    <ResponsiveContainer>
+                    <LineChart
+                        data={chartData}
+                        margin={{
+                        top: 5,
+                        right: 20,
+                        left: -10,
+                        bottom: 0,
+                        }}
+                    >
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                        <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                        <YAxis unit={unit} domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                        <ChartTooltip
+                            content={
+                                <ChartTooltipContent
+                                indicator="dot"
+                                labelFormatter={(label) => format(new Date(), `dd.MM.yy, ${label}`)}
+                                formatter={(value, name) => [`${(value as number).toFixed(1)}${unit}`, name]}
+                                />
+                            }
+                            cursor={{ strokeDasharray: '3 3' }}
                         />
-                    }
-                    cursor={{ strokeDasharray: '3 3' }}
-                />
-                <Legend content={<ChartLegendContent />} />
-                {Object.keys(chartConfig).map((key, index) => (
-                <Line
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    stroke={chartConfig[key].color}
-                    strokeWidth={2}
-                    dot={false}
-                />
-                ))}
-            </LineChart>
-            </ResponsiveContainer>
-      </ChartContainer>
-    </div>
+                        <ChartLegend content={<ChartLegendContent />} />
+                        <Line
+                            key={dataName}
+                            type="monotone"
+                            dataKey="value"
+                            name={dataName}
+                            stroke={chartConfig[dataName].color}
+                            strokeWidth={2}
+                            dot={false}
+                        />
+                    </LineChart>
+                    </ResponsiveContainer>
+                </ChartContainer>
+            </div>
+        </CardContent>
+    </Card>
   );
 }

@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import { Header } from "@/components/layout/header";
 import { Dashboard } from "@/components/dashboard/dashboard";
-import type { Host } from "@/lib/types";
+import type { Host, HostMetric } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getHostData } from "@/ai/flows/get-host-containers-flow";
 import { getSavedHosts, saveHosts } from "@/ai/flows/manage-hosts-flow";
@@ -27,10 +27,22 @@ export default function SentinelPage() {
       const data = await getHostData({ hostId: host.id, ipAddress: host.ipAddress, sshPort: host.sshPort || 22 });
       
       const now = Date.now();
-      const newHistoryEntry = {
+
+      const containerMetrics: HostMetric['containers'] = {};
+      data.containers.forEach(c => {
+        if (c.id && c.cpuUsage !== undefined && c.memoryUsage !== undefined) {
+          containerMetrics[c.id] = {
+            cpuUsage: c.cpuUsage,
+            memoryUsage: c.memoryUsage,
+          };
+        }
+      });
+
+      const newHistoryEntry: HostMetric = {
         timestamp: now,
         cpuUsage: data.cpuUsage ?? 0,
         memoryUsage: data.memoryUsage ?? 0,
+        containers: containerMetrics,
       };
 
       // Filter out old history entries and add the new one

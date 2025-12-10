@@ -28,10 +28,16 @@ export interface Container {
  */
 export type HostStatus = 'online' | 'offline';
 
+export interface ContainerMetric {
+    cpuUsage: number;
+    memoryUsage: number;
+}
+
 export interface HostMetric {
   timestamp: number;
   cpuUsage: number;
   memoryUsage: number;
+  containers: Record<string, ContainerMetric>; // Key is container ID
 }
 
 /**
@@ -57,5 +63,5 @@ export interface Host {
   diskUsedGb?: number;     // Genutzter Festplattenspeicher in GB.
   diskTotalGb?: number;    // Gesamter Festplattenspeicher in GB.
 
-  history?: HostMetric[];   // Verlauf der Systemmetriken
+  history: HostMetric[];   // Verlauf der Systemmetriken
 }
