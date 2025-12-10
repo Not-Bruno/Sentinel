@@ -1,6 +1,7 @@
 "use client"
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "./theme-provider"
+import { HostProvider } from "@/hooks/use-hosts";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +12,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
       themes={['light', 'dark', 'glacier']}
     >
-      {children}
+      <HostProvider>
+        {children}
+      </HostProvider>
       <Toaster />
     </ThemeProvider>
   )

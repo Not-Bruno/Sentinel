@@ -1,13 +1,13 @@
-'use client';
+
 import './globals.css';
 import React from 'react';
 import { Providers } from '@/components/providers';
 import { Header } from '@/components/layout/header';
-import { HostProvider } from '@/hooks/use-hosts';
 import { MainNav } from '@/components/layout/main-nav';
 
-// Importiert die zentrale Registry auf der obersten Ebene, um sicherzustellen,
+// Importiert die zentrale Registry auf der obersten Server-Ebene, um sicherzustellen,
 // dass alle Server-Aktionen vom Next.js-Build-Prozess erfasst werden.
+// Dies ist der entscheidende Fix für "Failed to find Server Action"-Fehler.
 import '@/ai/genkit-registry';
 
 export default function RootLayout({
@@ -27,14 +27,12 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <Providers>
-          <HostProvider>
             <div className="flex flex-col min-h-screen bg-background">
               <Header>
                 <MainNav />
               </Header>
               <main className="flex-1">{children}</main>
             </div>
-          </HostProvider>
         </Providers>
       </body>
     </html>
