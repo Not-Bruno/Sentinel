@@ -41,6 +41,14 @@ interface AddHostDialogProps {
   onAddHost: (host: Host) => void;
 }
 
+// Basic UUID generator that doesn't require a secure context
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
   const [open, setOpen] = useState(false);
   const form = useForm<AddHostFormValues>({
@@ -54,7 +62,7 @@ export function AddHostDialog({ onAddHost }: AddHostDialogProps) {
 
   function onSubmit(values: AddHostFormValues) {
     const newHost: Host = {
-        id: self.crypto.randomUUID(),
+        id: generateUUID(),
         ...values,
         status: 'offline',
         createdAt: Date.now(),
