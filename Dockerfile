@@ -1,38 +1,50 @@
-# Dockerfile
 
-# 1. Installer Stage: Install dependencies
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# ===== Build Stage =====
+# Verwende ein Node.js-Image, um die Anwendung zu bauen.
+FROM node:20-alpine AS builder
+
+# Setze das Arbeitsverzeichnis
 WORKDIR /app
-COPY package.json package-lock.json* ./
+
+# Kopiere package.json und package-lock.json
+COPY package*.json ./
+
+# Installiere die Dependencies
 RUN npm install
 
-# 2. Builder Stage: Build the Next.js application
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Kopiere den gesamten Quellcode
 COPY . .
-RUN npm run build
 
-# 3. Runner Stage: Setup the final container
-FROM node:20-alpine AS runner
-WORKDIR /app
-
+# Setze die Umgebungsvariable für den Build
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Baue die Next.js-Anwendung
+RUN npm run build
 
-# Create the data directory for persistent storage
-RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
+# Entferne devDependencies, um Platz zu sparen
+RUN npm prune --production
 
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-USER nextjs
+# ===== Production Stage =====
+# Verwende ein schlankes Basis-Image für die Produktion.
+FROM node:20-alpine AS production
 
+# Setze das Arbeitsverzeichnis
+WORKDIR /app
+
+# Kopiere die gebaute Anwendung und die Dependencies aus dem Builder-Stage
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/data ./data
+COPY --from=builder /app/package.json ./package.json
+
+# Exponiere den Port, auf dem die Anwendung läuft
 EXPOSE 3000
 
-ENV PORT=3000
+# Setze die Umgebungsvariable für die Produktion
+ENV NODE_ENV=production
 
+# Der Befehl zum Starten der Anwendung
 CMD ["node", "server.js"]

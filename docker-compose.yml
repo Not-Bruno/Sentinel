@@ -1,3 +1,4 @@
+
 version: '3.8'
 
 services:
@@ -6,17 +7,25 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: sentinel-app
+    # Passe den Port an, falls Port 3000 auf deinem System bereits belegt ist.
+    # Beispiel: "8080:3000" würde die Anwendung auf http://localhost:8080 verfügbar machen.
     ports:
       - "3000:3000"
     volumes:
+      # Dieses Volume speichert die Liste der Hosts persistent.
       - sentinel-data:/app/data
+      # Mountet den Docker-Socket, um lokale Container überwachen zu können.
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - NODE_ENV=production
-      # Ensure you format the key correctly (replace newlines with \n)
-      # - SSH_PRIVATE_KEY=-----BEGIN OPENSSH PRIVATE KEY-----\nYOUR_KEY_HERE\n-----END OPENSSH PRIVATE KEY-----
+      # --- SSH-Konfiguration für Remote-Hosts ---
+      # Entferne das Kommentarzeichen und füge hier deinen formatierten SSH-Schlüssel ein.
+      # Der Schlüssel muss als einzeiliger String formatiert sein (Zeilenumbrüche mit \n ersetzen).
+      # Beispiel: - SSH_PRIVATE_KEY=-----BEGIN OPENSSH PRIVATE KEY-----\nabcde...\n-----END OPENSSH PRIVATE KEY-----
+      # - SSH_PRIVATE_KEY=
     restart: unless-stopped
 
+# Definiert das benannte Volume für persistente Daten.
 volumes:
   sentinel-data:
     driver: local

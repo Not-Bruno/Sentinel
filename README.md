@@ -1,128 +1,141 @@
-# Sentinel - Real-time simple Docker Container Monitoring
 
-Unterstüzt durch KI
+# Sentinel - Echtzeit-Monitoring für Docker-Container
 
-![Sentinel Dashboard]()
+![Sentinel Dashboard](https://placehold.co/1200/800/1e293b/ffffff/png?text=Sentinel+Dashboard)
 
-Sentinel ist eine moderne, webbasierte Anwendung, mit der du den Status von Docker-Containern auf verschiedenen Servern in Echtzeit überwachen kannst. Egal, ob die Container auf deinem lokalen Rechner oder auf Remote-Servern laufen – Sentinel gibt dir den perfekten Überblick. Die Anwendung wurde mit Next.js und Tailwind CSS entwickelt und ist für einen kinderleichten Betrieb im eigenen Docker-Container optimiert.
+Sentinel ist eine moderne, webbasierte Anwendung zur Echtzeit-Überwachung des Status von Docker-Containern auf verschiedenen Servern. Egal, ob die Container lokal oder auf Remote-Servern via SSH laufen – Sentinel bietet dir den perfekten Überblick, unterstützt durch eine KI-gestützte Backend-Logik.
 
-## Was Sentinel dir bietet
+Die Anwendung wurde mit **Next.js** und **Tailwind CSS** entwickelt und ist für einen kinderleichten Betrieb im eigenen Docker-Container optimiert.
 
-- **Echtzeit-Überwachung:** Du siehst live, ob deine Docker-Container laufen, gestoppt sind oder einen Fehler haben.
-- **Multi-Host-Fähigkeit:** Überwache Container auf deinem lokalen Rechner und zusätzlich auf beliebig vielen Remote-Servern über SSH.
-- **Automatische Host-Erkennung:** Sentinel überwacht standardmäßig den Server, auf dem es selbst läuft – ganz ohne zusätzliche Konfiguration.
-- **Persistente Konfiguration:** Deine Liste von überwachten Servern wird dauerhaft gespeichert, sodass sie nach einem Neustart nicht verloren geht.
-- **Modernes UI:** Eine saubere, reaktionsschnelle und anpassbare Benutzeroberfläche mit Dark Mode.
+---
+
+## ✨ Features
+
+- **Echtzeit-Überwachung:** Sieh live, ob deine Docker-Container laufen, gestoppt sind oder einen Fehler haben.
+- **Multi-Host-Fähigkeit:** Überwache Container auf deinem lokalen System und beliebig vielen Remote-Servern über SSH.
+- **Automatische Host-Erkennung:** Sentinel überwacht standardmäßig den Host, auf dem es läuft, ohne zusätzliche Konfiguration.
+- **Performance-Analyse:** Detaillierte Analyse-Seiten für Server-Performance (CPU, RAM, Disk) und Container-Auslastung mit historischen Graphen.
+- **Persistente Konfiguration:** Deine Liste von überwachten Servern wird dauerhaft gespeichert.
+- **Modernes & Anpassbares UI:** Eine saubere, reaktionsschnelle Benutzeroberfläche mit Dark Mode.
 - **Einfache Bereitstellung:** Mit einer einzigen `docker-compose.yml`-Datei ist Sentinel blitzschnell einsatzbereit.
 
-## Technologie-Stack
+---
+
+## 🛠️ Technologie-Stack
 
 - **Frontend:** Next.js (React Framework)
 - **Styling:** Tailwind CSS & shadcn/ui
 - **Sprache:** TypeScript
-- **Backend-Kommunikation:** Genkit (für die Logik hinter den SSH-Verbindungen und lokalen Befehlen)
+- **Backend-Logik:** Genkit (für die Verwaltung von SSH-Verbindungen und lokalen Befehlen)
 - **Containerisierung:** Docker & Docker Compose
 
-## So startest du Sentinel
+---
 
-Um Sentinel zu nutzen, brauchst du nur Docker und Docker Compose auf deinem System.
+## 🚀 Erste Schritte
 
-1.  **Repository klonen (falls du es noch nicht hast):**
-    ```bash
-    git clone <repository-url>
-    cd <repository-ordner>
-    ```
+Um Sentinel zu nutzen, benötigst du lediglich **Docker** und **Docker Compose** auf deinem System.
 
-2.  **Anwendung bauen und starten:**
-    Führe den folgenden Befehl im Hauptverzeichnis deines Projekts aus:
-    ```bash
-    docker-compose up --build -d
-    ```
-    Dieser Befehl baut das Docker-Image für Sentinel und startet den Container im Hintergrund (`-d`).
+#### 1. Repository klonen (falls noch nicht geschehen)
+```bash
+git clone <repository-url>
+cd <repository-ordner>
+```
 
-3.  **Anwendung öffnen:**
-    Öffne deinen Webbrowser und gehe zu `http://localhost:3000`. Du solltest sofort das Sentinel-Dashboard sehen, das bereits die Container deines lokalen Rechners anzeigt.
+#### 2. Anwendung bauen und starten
+Führe den folgenden Befehl im Hauptverzeichnis des Projekts aus:
+```bash
+docker-compose up --build -d
+```
+Dieser Befehl baut das Docker-Image für Sentinel, startet den Container im Hintergrund (`-d`) und stellt sicher, dass er bei einem Neustart des Systems automatisch wieder gestartet wird.
 
-## Konfiguration
+#### 3. Sentinel öffnen
+Öffne deinen Webbrowser und navigiere zu `http://localhost:3000`. Du solltest sofort das Sentinel-Dashboard sehen, das bereits die Container deines lokalen Host-Systems anzeigt.
 
-### Dein lokaler Host
-Standardmäßig liest Sentinel die Docker-Informationen deines Host-Systems über den Docker-Socket (`/var/run/docker.sock`). Das wird in der `docker-compose.yml` durch das sogenannte "Mounten" des Sockets ermöglicht:
+---
+
+## ⚙️ Konfiguration
+
+### Lokaler Host
+Standardmäßig liest Sentinel die Docker-Informationen deines Host-Systems über den Docker-Socket (`/var/run/docker.sock`). Dies wird in der `docker-compose.yml` durch das Mounten des Sockets ermöglicht:
 
 ```yaml
 volumes:
   - /var/run/docker.sock:/var/run/docker.sock
 ```
+Für die Überwachung deines lokalen Systems ist **keine weitere Konfiguration nötig**.
 
-Dadurch ist für die Überwachung deines lokalen Systems keine weitere Konfiguration nötig. Einfach starten und loslegen!
+### Remote-Hosts (via SSH)
+Um zusätzliche Server zu überwachen, muss Sentinel Zugriff über einen privaten SSH-Schlüssel erhalten.
 
-### Remote-Hosts (über SSH)
+#### 1. SSH-Schlüssel vorbereiten
+Du benötigst einen privaten SSH-Schlüssel (z. B. `id_rsa`), der berechtigt ist, sich auf den Zielservern anzumelden. In der Regel erfordert Docker Root-Rechte, daher sollte der Schlüssel für den `root`-Benutzer konfiguriert sein.
 
-Möchtest du zusätzliche Server überwachen? Dann musst du Sentinel den Zugriff über einen privaten SSH-Schlüssel geben.
+#### 2. SSH-Schlüssel für Docker Compose formatieren
+Der private Schlüssel muss als **einzeiliger String** in die `docker-compose.yml` eingefügt werden, wobei alle Zeilenumbrüche durch `\n` ersetzt werden.
 
-1.  **SSH-Schlüssel vorbereiten:**
-    Du benötigst einen privaten SSH-Schlüssel, der berechtigt ist, sich auf den Zielservern anzumelden (in der Regel als `root`-Benutzer, da Docker oft Root-Rechte erfordert).
+**Beispiel:**
+Dein Originalschlüssel in der Datei `my_key`:
+```
+-----BEGIN OPENSSH PRIVATE KEY-----
+abcde...
+fghij...
+-----END OPENSSH PRIVATE KEY-----
+```
 
-2.  **Umgebungsvariable `SSH_PRIVATE_KEY` setzen:**
-    Füge deinen privaten Schlüssel als Umgebungsvariable in die `docker-compose.yml`-Datei ein. **Wichtig:** Der Schlüssel muss als **einzeiliger String** formatiert sein, bei dem alle Zeilenumbrüche durch `\n` ersetzt werden.
+Wird zu diesem einzeiligen String:
+```
+-----BEGIN OPENSSH PRIVATE KEY-----\nabcde...\nfghij...\n-----END OPENSSH PRIVATE KEY-----
+```
 
-    **Beispiel:**
-    So sieht dein Originalschlüssel aus (`my_key`):
-    ```
-    -----BEGIN OPENSSH PRIVATE KEY-----
-    abcde...
-    fghij...
-    -----END OPENSSH PRIVATE KEY-----
-    ```
+#### 3. Schlüssel in `docker-compose.yml` einfügen
+Öffne die `docker-compose.yml` und füge den formatierten Schlüssel bei der Umgebungsvariable `SSH_PRIVATE_KEY` ein. Entferne dazu das Kommentarzeichen `#`.
 
-    Und so formatierst du ihn für die `docker-compose.yml`:
-    ```yaml
+```yaml
+services:
+  sentinel:
+    # ... andere Konfigurationen
     environment:
-      - SSH_PRIVATE_KEY=-----BEGIN OPENSSH PRIVATE KEY-----\nabcde...\nfghij...\n-----END OPENSSH PRIVATE KEY-----
-    ```
+      - NODE_ENV=production
+      # Wichtig: Den Schlüssel als einzeiligen String einfügen und das Kommentarzeichen entfernen
+      - SSH_PRIVATE_KEY=DEIN_FORMATIERTER_SCHLUESSEL
+```
 
-    Füge diesen formatierten Schlüssel in den `sentinel`-Service deiner `docker-compose.yml` ein:
-    ```yaml
-    services:
-      sentinel:
-        # ... andere Konfigurationen
-        environment:
-          - NODE_ENV=production
-          - SSH_PRIVATE_KEY=DEIN_FORMATIERTER_SCHLUESSEL
-    ```
+#### 4. Container neu starten
+Nachdem du die `docker-compose.yml` geändert hast, starte den Container neu, damit die Änderungen wirksam werden:
+```bash
+docker-compose up --build -d
+```
 
-3.  **Container neu starten:**
-    Nachdem du die `docker-compose.yml` geändert hast, starte den Container neu, damit die Änderungen übernommen werden:
-    ```bash
-    docker-compose up --build -d
-    ```
+#### 5. Host im UI hinzufügen
+Klicke im Sentinel-Dashboard auf **"Host hinzufügen"** und gib den Namen, die IP-Adresse und den SSH-Port des Remote-Servers ein.
 
-4.  **Host im UI hinzufügen:**
-    Klicke im Sentinel-Dashboard auf "Add Host" und gib den Namen, die IP-Adresse und den SSH-Port des Remote-Servers ein.
+---
 
-### Persistente Speicherung
+## 💾 Persistente Speicherung
 
-Die Liste der Hosts, die du hinzufügst, wird in der Datei `/app/data/hosts.json` innerhalb des Containers gespeichert. Damit diese Liste auch dann erhalten bleibt, wenn du den Container neu erstellst, verwendet die `docker-compose.yml` ein sogenanntes "named Volume" (`sentinel-data`):
+Die Liste der von dir hinzugefügten Hosts wird in der Datei `/app/data/hosts.json` innerhalb des Containers gespeichert. Damit diese Liste auch dann erhalten bleibt, wenn der Container neu erstellt wird, verwendet die `docker-compose.yml` ein **named Volume** (`sentinel-data`):
 
 ```yaml
 volumes:
   sentinel-data:
     driver: local
 ```
+Dieses Volume stellt sicher, dass deine Host-Liste sicher auf deinem Host-System gespeichert wird.
 
-Das stellt sicher, dass deine Host-Liste sicher aufbewahrt wird.
+---
 
-## Projektstruktur
+## 📂 Projektstruktur
 
 ```
 .
 ├── data/
-│   └── hosts.json        # Hier wird deine Liste der überwachten Hosts gespeichert
+│   └── hosts.json        # Speichert die Liste deiner überwachten Hosts.
 ├── src/
-│   ├── app/              # Next.js App Router, Seiten und Layouts
-│   ├── components/       # Wiederverwendbare React-Komponenten (UI-Elemente)
-│   ├── ai/               # Genkit-Flows für die Server-Logik (SSH, Dateizugriff)
-│   └── lib/              # Hilfsfunktionen, Typdefinitionen etc.
-├── Dockerfile            # Definiert, wie das Docker-Image für Sentinel gebaut wird
-├── docker-compose.yml    # Definiert den Sentinel-Service und das Daten-Volume
-└── next.config.ts        # Konfigurationsdatei für Next.js
+│   ├── app/              # Next.js App Router, Seiten und Layouts.
+│   ├── components/       # Wiederverwendbare React-Komponenten (UI-Elemente).
+│   ├── ai/               # Genkit-Flows für die Server-Logik (SSH, Dateizugriff etc.).
+│   └── lib/              # Hilfsfunktionen, Typ-Definitionen und mehr.
+├── Dockerfile            # Definiert, wie das Docker-Image gebaut wird.
+├── docker-compose.yml    # Definiert den Sentinel-Service und verknüpfte Volumes.
+└── next.config.ts        # Konfigurationsdatei für Next.js.
 ```
